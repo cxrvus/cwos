@@ -1,9 +1,10 @@
+use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Parser {
-	char_to_morse: HashMap<char, String>,
-	morse_to_char: HashMap<String, char>,
+	encoding_map: HashMap<char, String>,
+	decoding_map: HashMap<String, char>,
 }
 
 impl Parser {
@@ -23,9 +24,44 @@ impl Parser {
 		}
 
 		Self {
-			char_to_morse,
-			morse_to_char,
+			encoding_map: char_to_morse,
+			decoding_map: morse_to_char,
 		}
+	}
+
+	pub fn encode(&self, chars: &str) -> Result<String> {
+		let mut encoded = String::new();
+
+		for char in chars.chars() {
+			let char = char.to_ascii_uppercase();
+
+			let morse_char = if char == ' ' {
+				Ok("/")
+			} else {
+				self.encoding_map
+					.get(&char)
+					.map(|s| s.as_str())
+					.ok_or(anyhow!("invalid character: {}", char))
+			};
+
+			encoded += morse_char?;
+			encoded += " ";
+		}
+
+		Ok(encoded.trim().to_string())
+	}
+
+	pub fn decode(&self, morse: &str) -> String {
+		let mut decoded = String::new();
+
+		for word in morse.split('/') {
+			for letter in word.trim().split(' ') {
+				decoded.push(*self.decoding_map.get(letter).unwrap_or(&'~'));
+			}
+			decoded.push(' ');
+		}
+
+		decoded.to_ascii_uppercase()
 	}
 }
 
