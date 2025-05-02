@@ -1,5 +1,6 @@
 mod morse;
 
 fn main() {
-	println!("Hello, world!");
+	let parser = morse::Parser::new();
+	dbg!(parser);
 }

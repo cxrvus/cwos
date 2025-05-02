@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Parser {
 	char_to_morse: HashMap<char, String>,
 	morse_to_char: HashMap<String, char>,
