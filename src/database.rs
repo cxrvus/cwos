@@ -37,7 +37,7 @@ pub struct Database {
 	config: Config,
 }
 
-const DB_FILE: &str = "cxnothing.json";
+const DB_FILE: &str = "nothingdb.json";
 
 impl Database {
 	fn path() -> PathBuf {
