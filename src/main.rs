@@ -1,6 +1,6 @@
 mod char_converter;
 mod controller;
-mod data;
+mod database;
 
 fn main() {
 	let conv = char_converter::CharConverter::new();

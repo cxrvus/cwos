@@ -7,3 +7,4 @@ edition = "2021"
 anyhow = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
+dirs = "*"
