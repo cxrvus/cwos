@@ -1,11 +1,11 @@
-mod morse;
+mod char_converter;
 
 fn main() {
-	let parser = morse::Parser::new();
+	let conv = char_converter::CharConverter::new();
 
 	let message = "hello world!";
-	let encoded = parser.encode(message).unwrap();
+	let encoded = conv.encode(message).unwrap();
 	println!("{}", encoded);
-	let decoded = parser.decode(&encoded);
+	let decoded = conv.decode(&encoded);
 	println!("{}", decoded);
 }

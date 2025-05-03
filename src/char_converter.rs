@@ -2,12 +2,12 @@ use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct Parser {
+pub struct CharConverter {
 	encoding_map: HashMap<char, String>,
 	decoding_map: HashMap<String, char>,
 }
 
-impl Parser {
+impl CharConverter {
 	pub fn new() -> Self {
 		let mut char_to_morse = HashMap::new();
 		let mut morse_to_char = HashMap::new();
