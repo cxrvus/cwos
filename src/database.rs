@@ -56,9 +56,9 @@ impl Database {
 		}
 	}
 
-	pub fn save(db: &Database) {
+	pub fn save(&self) {
 		let path = Self::path();
-		let default_db = serde_json::to_string(db).expect("failed to serialize db file");
-		write(path, default_db).expect("failed to write to db file");
+		let db = serde_json::to_string_pretty(self).expect("failed to serialize db file");
+		write(path, db).expect("failed to write to db file");
 	}
 }
