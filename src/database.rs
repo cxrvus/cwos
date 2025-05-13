@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
 	unit_ms: u32,
-	break_units: u32, // for Fansworth timing - defaults to BREAK_UNITS
+	break_units: u32, // for Fansworth timing
 	user_freq: u32,
 	comp_freq: u32, // defaults to user_freq
 	output_modes: OutputModes,

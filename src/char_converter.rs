@@ -61,7 +61,7 @@ impl CharConverter {
 			decoded.push(' ');
 		}
 
-		decoded.to_ascii_uppercase()
+		decoded.trim().to_ascii_uppercase()
 	}
 }
 
@@ -119,3 +119,26 @@ $ ...-..-
 @ .--.-.
 ~ .-.-.-.
 "#;
+
+#[cfg(test)]
+mod tests {
+
+	#[test]
+	fn test_char_converter_encode_decode() {
+		use super::CharConverter;
+
+		let conv = CharConverter::new();
+
+		let message = "HELLO WORLD!";
+		let encoded = conv.encode(message).unwrap();
+
+		assert!(!encoded.is_empty(), "encoded message should not be empty");
+
+		let decoded = conv.decode(&encoded);
+
+		assert_eq!(
+			decoded, message,
+			"decoded message should match the original"
+		);
+	}
+}
