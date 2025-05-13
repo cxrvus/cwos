@@ -15,6 +15,10 @@ impl CharConverter {
 		let lines = MORSE_KEY.trim().lines();
 
 		for line in lines {
+			if line.is_empty() {
+				continue;
+			}
+
 			let mut kvp = line.split_whitespace();
 			let key = kvp.next().unwrap().chars().next().unwrap();
 			let val = kvp.next().unwrap().to_string();
@@ -65,6 +69,12 @@ impl CharConverter {
 	}
 }
 
+enum Cw {
+	Sign(char),
+	Prosign(String),
+	Space,
+}
+
 const MORSE_KEY: &str = r#"
 A .-
 B -...
@@ -92,6 +102,7 @@ W .--
 X -..-
 Y -.--
 Z --..
+
 1 .----
 2 ..---
 3 ...--
@@ -102,6 +113,7 @@ Z --..
 8 ---..
 9 ----.
 0 -----
+
 . .-.-.-
 , --..--
 ? ..--..
@@ -118,6 +130,8 @@ Z --..
 $ ...-..-
 @ .--.-.
 ~ .-.-.-.
+
+[SOS] ...---...
 "#;
 
 #[cfg(test)]
@@ -140,5 +154,7 @@ mod tests {
 			decoded, message,
 			"decoded message should match the original"
 		);
+
+		println!("{encoded}\n{decoded}");
 	}
 }
