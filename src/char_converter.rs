@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
+use std::fmt::{self, Formatter};
 
-#[derive(Debug)]
 pub struct SymbolConverter {
 	encoding_map: HashMap<PlainSymbol, Vec<bool>>,
 	decoding_map: HashMap<Vec<bool>, PlainSymbol>,
@@ -12,7 +12,7 @@ impl SymbolConverter {
 		let mut encoding_map = HashMap::new();
 		let mut decoding_map = HashMap::new();
 
-		let lines = MORSE_KEY.trim().lines();
+		let lines = CW_SPEC.trim().lines();
 
 		for line in lines {
 			if line.is_empty() {
@@ -29,10 +29,7 @@ impl SymbolConverter {
 				PlainSymbol::Prosign(key.to_string())
 			};
 
-			let val = kvp
-				.next()
-				.map(|pulse_str| CwSymbol::pulses_from_str(pulse_str))
-				.unwrap();
+			let val = kvp.next().map(CwSymbol::pulses_from_str).unwrap();
 
 			encoding_map.insert(key.clone(), val.clone());
 			decoding_map.insert(val, key);
@@ -75,13 +72,14 @@ pub enum PlainSymbol {
 	Space,
 }
 
-impl ToString for PlainSymbol {
-	fn to_string(&self) -> String {
-		match self {
+impl fmt::Display for PlainSymbol {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		let s = match self {
 			Self::Sign(c) => c.to_string(),
 			Self::Prosign(s) => s.clone(),
 			Self::Space => " ".into(),
-		}
+		};
+		write!(f, "{}", s)
 	}
 }
 
@@ -109,19 +107,20 @@ impl CwSymbol {
 	}
 }
 
-impl ToString for CwSymbol {
-	fn to_string(&self) -> String {
-		match self {
-			Self::Break => " / ".into(),
+impl fmt::Display for CwSymbol {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		let s = match self {
+			Self::Break => " / ".to_string(),
 			Self::Pulses(pulses) => pulses
 				.iter()
 				.map(|&pulse| if pulse { "-" } else { "." })
 				.collect::<String>(),
-		}
+		};
+		write!(f, "{}", s)
 	}
 }
 
-const MORSE_KEY: &str = r#"
+const CW_SPEC: &str = r#"
 A .-
 B -...
 C -.-.
