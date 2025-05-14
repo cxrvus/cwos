@@ -1,4 +1,4 @@
-use crate::database::Database;
+use crate::{char_converter::PlainSymbol, database::Database};
 
 #[derive(Default)]
 pub struct Controller {
@@ -14,7 +14,7 @@ impl Controller {
 		}
 	}
 
-	pub fn tick(&self) {
+	pub fn tick(&self, cw: PlainSymbol) {
 		todo!()
 	}
 }

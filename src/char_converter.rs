@@ -2,15 +2,15 @@ use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct CharConverter {
-	encoding_map: HashMap<char, String>,
-	decoding_map: HashMap<String, char>,
+pub struct SymbolConverter {
+	encoding_map: HashMap<PlainSymbol, Vec<bool>>,
+	decoding_map: HashMap<Vec<bool>, PlainSymbol>,
 }
 
-impl CharConverter {
+impl SymbolConverter {
 	pub fn new() -> Self {
-		let mut char_to_morse = HashMap::new();
-		let mut morse_to_char = HashMap::new();
+		let mut encoding_map = HashMap::new();
+		let mut decoding_map = HashMap::new();
 
 		let lines = MORSE_KEY.trim().lines();
 
@@ -20,59 +20,105 @@ impl CharConverter {
 			}
 
 			let mut kvp = line.split_whitespace();
-			let key = kvp.next().unwrap().chars().next().unwrap();
-			let val = kvp.next().unwrap().to_string();
 
-			char_to_morse.insert(key, val.clone());
-			morse_to_char.insert(val, key);
+			let key = kvp.next().unwrap(); //.chars().next().unwrap();
+
+			let key = if key.len() == 1 {
+				PlainSymbol::Sign(key.chars().next().unwrap())
+			} else {
+				PlainSymbol::Prosign(key.to_string())
+			};
+
+			let val = kvp
+				.next()
+				.map(|pulse_str| CwSymbol::pulses_from_str(pulse_str))
+				.unwrap();
+
+			encoding_map.insert(key.clone(), val.clone());
+			decoding_map.insert(val, key);
 		}
 
 		Self {
-			encoding_map: char_to_morse,
-			decoding_map: morse_to_char,
+			encoding_map,
+			decoding_map,
 		}
 	}
 
-	pub fn encode(&self, chars: &str) -> Result<String> {
-		let mut encoded = String::new();
-
-		for char in chars.chars() {
-			let char = char.to_ascii_uppercase();
-
-			let morse_char = if char == ' ' {
-				Ok("/")
-			} else {
-				self.encoding_map
-					.get(&char)
-					.map(|s| s.as_str())
-					.ok_or(anyhow!("invalid character: {}", char))
-			};
-
-			encoded += morse_char?;
-			encoded += " ";
+	pub fn encode(&self, plain: PlainSymbol) -> Result<CwSymbol> {
+		if let PlainSymbol::Space = plain {
+			Ok(CwSymbol::Break)
+		} else {
+			self.encoding_map
+				.get(&plain)
+				.cloned()
+				.map(CwSymbol::Pulses)
+				.ok_or(anyhow!("invalid plaintext symbol: {}", plain.to_string()))
 		}
-
-		Ok(encoded.trim().to_string())
 	}
 
-	pub fn decode(&self, morse: &str) -> String {
-		let mut decoded = String::new();
-
-		for word in morse.split('/') {
-			for letter in word.trim().split(' ') {
-				decoded.push(*self.decoding_map.get(letter).unwrap_or(&'~'));
-			}
-			decoded.push(' ');
+	pub fn decode(&self, cw: CwSymbol) -> Result<PlainSymbol> {
+		if let CwSymbol::Pulses(ref pulses) = cw {
+			self.decoding_map
+				.get(pulses)
+				.cloned()
+				.ok_or(anyhow!("invalid CW sequence: {}", cw.to_string()))
+		} else {
+			Ok(PlainSymbol::Space)
 		}
-
-		decoded.trim().to_ascii_uppercase()
 	}
 }
 
-enum Cw {
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum PlainSymbol {
 	Sign(char),
 	Prosign(String),
 	Space,
+}
+
+impl ToString for PlainSymbol {
+	fn to_string(&self) -> String {
+		match self {
+			Self::Sign(c) => c.to_string(),
+			Self::Prosign(s) => s.clone(),
+			Self::Space => " ".into(),
+		}
+	}
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum CwSymbol {
+	Pulses(Vec<bool>),
+	Break,
+}
+
+impl CwSymbol {
+	pub fn pulses_from_str(pulse_str: &str) -> Vec<bool> {
+		let mut pulses = vec![];
+
+		for pulse_char in pulse_str.chars() {
+			let pulse = match pulse_char {
+				'.' => false,
+				'-' => true,
+				_ => panic!("char may only be '.' or '-'"),
+			};
+
+			pulses.push(pulse);
+		}
+
+		pulses
+	}
+}
+
+impl ToString for CwSymbol {
+	fn to_string(&self) -> String {
+		match self {
+			Self::Break => " / ".into(),
+			Self::Pulses(pulses) => pulses
+				.iter()
+				.map(|&pulse| if pulse { "-" } else { "." })
+				.collect::<String>(),
+		}
+	}
 }
 
 const MORSE_KEY: &str = r#"
@@ -139,9 +185,9 @@ mod tests {
 
 	#[test]
 	fn test_char_converter_encode_decode() {
-		use super::CharConverter;
+		use super::SymbolConverter;
 
-		let conv = CharConverter::new();
+		let conv = SymbolConverter::new();
 
 		let message = "HELLO WORLD!";
 		let encoded = conv.encode(message).unwrap();
