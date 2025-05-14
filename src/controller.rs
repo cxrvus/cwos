@@ -1,4 +1,4 @@
-use crate::{char_converter::PlainSymbol, database::Database};
+use crate::{database::Database, symbol_converter::PlainSymbol};
 
 #[derive(Default)]
 pub struct Controller {
