@@ -14,7 +14,7 @@ impl Controller {
 		}
 	}
 
-	pub fn tick(&self, cw: PlainSymbol) {
+	pub fn tick(&self, cw: Option<PlainSymbol>) -> Option<PlainSymbol> {
 		todo!()
 	}
 }
