@@ -1,4 +1,6 @@
 use anyhow::{anyhow, Result};
+
+// idea: remove std stuff for embedded
 use std::collections::HashMap;
 use std::fmt::{self, Formatter};
 
