@@ -176,8 +176,20 @@ $ ...-..-
 @ .--.-.
 ~ .-.-.-.
 
+[AS] .-...
+[CT] -.-.-
+[EC] .-.-.
+[RT] .-.-
+[VA] ...-.-
 [SOS] ...---...
 "#;
+
+// ## Prosigns:
+// [AS] = wait
+// [CT] = commencing transmission
+// [EC] = end copy / new page
+// [RT] = new line
+// [VA] = end of contact
 
 #[cfg(test)]
 mod tests {}
