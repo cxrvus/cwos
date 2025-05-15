@@ -10,7 +10,32 @@ pub struct SymbolConverter {
 }
 
 impl SymbolConverter {
-	pub fn new() -> Self {
+	pub fn encode(&self, plain: Symbol) -> Result<CwSymbol> {
+		if let Symbol::Break = plain {
+			Ok(CwSymbol::Break)
+		} else {
+			self.encoding_map
+				.get(&plain)
+				.cloned()
+				.map(CwSymbol::Pulses)
+				.ok_or(anyhow!("invalid plaintext symbol: {}", plain.to_string()))
+		}
+	}
+
+	pub fn decode(&self, cw: CwSymbol) -> Result<Symbol> {
+		if let CwSymbol::Pulses(ref pulses) = cw {
+			self.decoding_map
+				.get(pulses)
+				.cloned()
+				.ok_or(anyhow!("invalid CW sequence: {}", cw.to_string()))
+		} else {
+			Ok(Symbol::Break)
+		}
+	}
+}
+
+impl Default for SymbolConverter {
+	fn default() -> Self {
 		let mut encoding_map = HashMap::new();
 		let mut decoding_map = HashMap::new();
 
@@ -40,29 +65,6 @@ impl SymbolConverter {
 		Self {
 			encoding_map,
 			decoding_map,
-		}
-	}
-
-	pub fn encode(&self, plain: Symbol) -> Result<CwSymbol> {
-		if let Symbol::Break = plain {
-			Ok(CwSymbol::Break)
-		} else {
-			self.encoding_map
-				.get(&plain)
-				.cloned()
-				.map(CwSymbol::Pulses)
-				.ok_or(anyhow!("invalid plaintext symbol: {}", plain.to_string()))
-		}
-	}
-
-	pub fn decode(&self, cw: CwSymbol) -> Result<Symbol> {
-		if let CwSymbol::Pulses(ref pulses) = cw {
-			self.decoding_map
-				.get(pulses)
-				.cloned()
-				.ok_or(anyhow!("invalid CW sequence: {}", cw.to_string()))
-		} else {
-			Ok(Symbol::Break)
 		}
 	}
 }
