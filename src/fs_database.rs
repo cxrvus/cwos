@@ -3,7 +3,7 @@ use std::{
 	path::PathBuf,
 };
 
-use crate::database::Database;
+use crate::core::database::Database;
 
 const DB_FILE: &str = "nothingdb.json";
 

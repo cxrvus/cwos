@@ -1,4 +1,4 @@
-use crate::database::Database;
+use super::database::Database;
 
 // todo: implement Peripherals as <T, U>
 // with fn tick(msg: T) -> U
