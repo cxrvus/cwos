@@ -1,3 +1,5 @@
 mod repl;
 
-fn main() {}
+fn main() {
+	repl::main();
+}
