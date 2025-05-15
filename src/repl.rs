@@ -2,7 +2,7 @@ use cwos::core::{
 	context::Context,
 	database::Database,
 	routine::{Echo, Routine},
-	symbol_converter::Symbol,
+	symbol::Symbol,
 };
 use std::io::{self, Read};
 use termion::raw::IntoRawMode;
