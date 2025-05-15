@@ -3,6 +3,7 @@ use database::Database;
 
 mod context;
 mod database;
+mod routine;
 mod symbol_converter;
 
 fn main() {

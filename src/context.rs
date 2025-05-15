@@ -1,4 +1,4 @@
-use crate::{database::Database, symbol_converter::Symbol};
+use crate::database::Database;
 
 // todo: implement Peripherals as <T, U>
 // with fn tick(msg: T) -> U
@@ -12,8 +12,4 @@ impl Context {
 	pub fn new(db: Database) -> Self {
 		Self { database: db }
 	}
-}
-
-pub trait Routine {
-	fn tick(&mut self, ctx: &mut Context, input: Option<Symbol>) -> Option<Symbol>;
 }
