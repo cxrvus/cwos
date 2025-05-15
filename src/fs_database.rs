@@ -5,7 +5,7 @@ use std::{
 
 use crate::core::database::Database;
 
-const DB_FILE: &str = "nothingdb.json";
+const DB_FILE: &str = "cwos_db.json";
 
 struct FsDatabase(Database);
 
