@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::fmt::{self, Formatter};
 
 pub struct SymbolConverter {
-	encoding_map: HashMap<PlainSymbol, Vec<bool>>,
-	decoding_map: HashMap<Vec<bool>, PlainSymbol>,
+	encoding_map: HashMap<Symbol, Vec<bool>>,
+	decoding_map: HashMap<Vec<bool>, Symbol>,
 }
 
 impl SymbolConverter {
@@ -24,9 +24,9 @@ impl SymbolConverter {
 			let key = kvp.next().unwrap(); //.chars().next().unwrap();
 
 			let key = if key.len() == 1 {
-				PlainSymbol::Sign(key.chars().next().unwrap())
+				Symbol::Sign(key.chars().next().unwrap())
 			} else {
-				PlainSymbol::Prosign(key.to_string())
+				Symbol::Prosign(key.to_string())
 			};
 
 			let val = kvp.next().map(CwSymbol::pulses_from_str).unwrap();
@@ -41,8 +41,8 @@ impl SymbolConverter {
 		}
 	}
 
-	pub fn encode(&self, plain: PlainSymbol) -> Result<CwSymbol> {
-		if let PlainSymbol::Space = plain {
+	pub fn encode(&self, plain: Symbol) -> Result<CwSymbol> {
+		if let Symbol::Space = plain {
 			Ok(CwSymbol::Break)
 		} else {
 			self.encoding_map
@@ -53,26 +53,26 @@ impl SymbolConverter {
 		}
 	}
 
-	pub fn decode(&self, cw: CwSymbol) -> Result<PlainSymbol> {
+	pub fn decode(&self, cw: CwSymbol) -> Result<Symbol> {
 		if let CwSymbol::Pulses(ref pulses) = cw {
 			self.decoding_map
 				.get(pulses)
 				.cloned()
 				.ok_or(anyhow!("invalid CW sequence: {}", cw.to_string()))
 		} else {
-			Ok(PlainSymbol::Space)
+			Ok(Symbol::Space)
 		}
 	}
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub enum PlainSymbol {
+pub enum Symbol {
 	Sign(char),
 	Prosign(String),
 	Space,
 }
 
-impl fmt::Display for PlainSymbol {
+impl fmt::Display for Symbol {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		let s = match self {
 			Self::Sign(c) => c.to_string(),
