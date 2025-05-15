@@ -10,20 +10,20 @@ pub struct SymbolConverter {
 }
 
 impl SymbolConverter {
-	pub fn encode(&self, plain: Symbol) -> Result<CwSymbol> {
+	pub fn encode(&self, plain: Symbol) -> Result<PulseSymbol> {
 		if let Symbol::Break = plain {
-			Ok(CwSymbol::Break)
+			Ok(PulseSymbol::Break)
 		} else {
 			self.encoding_map
 				.get(&plain)
 				.cloned()
-				.map(CwSymbol::Pulses)
+				.map(PulseSymbol::Pulses)
 				.ok_or(anyhow!("invalid plaintext symbol: {}", plain.to_string()))
 		}
 	}
 
-	pub fn decode(&self, cw: CwSymbol) -> Result<Symbol> {
-		if let CwSymbol::Pulses(ref pulses) = cw {
+	pub fn decode(&self, cw: PulseSymbol) -> Result<Symbol> {
+		if let PulseSymbol::Pulses(ref pulses) = cw {
 			self.decoding_map
 				.get(pulses)
 				.cloned()
@@ -56,7 +56,7 @@ impl Default for SymbolConverter {
 				Symbol::Prosign(key.to_string())
 			};
 
-			let val = kvp.next().map(CwSymbol::pulses_from_str).unwrap();
+			let val = kvp.next().map(PulseSymbol::pulses_from_str).unwrap();
 
 			encoding_map.insert(key.clone(), val.clone());
 			decoding_map.insert(val, key);
@@ -88,12 +88,12 @@ impl fmt::Display for Symbol {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub enum CwSymbol {
+pub enum PulseSymbol {
 	Pulses(Vec<bool>),
 	Break,
 }
 
-impl CwSymbol {
+impl PulseSymbol {
 	pub fn pulses_from_str(pulse_str: &str) -> Vec<bool> {
 		let mut pulses = vec![];
 
@@ -111,7 +111,7 @@ impl CwSymbol {
 	}
 }
 
-impl fmt::Display for CwSymbol {
+impl fmt::Display for PulseSymbol {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		let s = match self {
 			Self::Break => " / ".to_string(),

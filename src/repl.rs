@@ -1,5 +1,5 @@
 use cwos::core::{
-	context::Context,
+	context::CwContext,
 	database::Database,
 	routine::{Echo, Routine},
 	symbol::Symbol,
@@ -11,7 +11,7 @@ pub fn main() {
 	let stdin = io::stdin();
 	let _stdout = io::stdout().into_raw_mode().unwrap();
 
-	let mut ctx = Context::new(Database::default());
+	let mut ctx = CwContext::new(Database::default());
 	let mut controller = Echo;
 
 	for byte in stdin.bytes() {
