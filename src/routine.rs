@@ -1,5 +1,5 @@
 use crate::{context::Context, symbol_converter::Symbol};
 
 pub trait Routine {
-	fn tick(&mut self, ctx: &mut Context, input: Option<Symbol>) -> Option<Symbol>;
+	fn tick(&mut self, ctx: &mut Context, input: Symbol) -> Symbol;
 }

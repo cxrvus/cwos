@@ -42,7 +42,7 @@ impl SymbolConverter {
 	}
 
 	pub fn encode(&self, plain: Symbol) -> Result<CwSymbol> {
-		if let Symbol::Space = plain {
+		if let Symbol::Break = plain {
 			Ok(CwSymbol::Break)
 		} else {
 			self.encoding_map
@@ -60,7 +60,7 @@ impl SymbolConverter {
 				.cloned()
 				.ok_or(anyhow!("invalid CW sequence: {}", cw.to_string()))
 		} else {
-			Ok(Symbol::Space)
+			Ok(Symbol::Break)
 		}
 	}
 }
@@ -69,7 +69,7 @@ impl SymbolConverter {
 pub enum Symbol {
 	Sign(char),
 	Prosign(String),
-	Space,
+	Break,
 }
 
 impl fmt::Display for Symbol {
@@ -77,7 +77,7 @@ impl fmt::Display for Symbol {
 		let s = match self {
 			Self::Sign(c) => c.to_string(),
 			Self::Prosign(s) => s.clone(),
-			Self::Space => " ".into(),
+			Self::Break => " ".into(),
 		};
 		write!(f, "{}", s)
 	}
