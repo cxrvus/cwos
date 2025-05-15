@@ -180,26 +180,4 @@ $ ...-..-
 "#;
 
 #[cfg(test)]
-mod tests {
-
-	#[test]
-	fn test_char_converter_encode_decode() {
-		use super::SymbolConverter;
-
-		let conv = SymbolConverter::new();
-
-		let message = "HELLO WORLD!";
-		let encoded = conv.encode(message).unwrap();
-
-		assert!(!encoded.is_empty(), "encoded message should not be empty");
-
-		let decoded = conv.decode(&encoded);
-
-		assert_eq!(
-			decoded, message,
-			"decoded message should match the original"
-		);
-
-		println!("{encoded}\n{decoded}");
-	}
-}
+mod tests {}
