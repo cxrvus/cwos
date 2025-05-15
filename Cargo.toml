@@ -4,7 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# todo: set actual version numbers
+
+# STD Only:
+dirs = "*"
+
+# STD Variations:
 anyhow = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-dirs = "*"
+
+# No STD:
+# ...
