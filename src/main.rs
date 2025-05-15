@@ -1,11 +1,11 @@
-use controller::Controller;
+use context::Context;
 use database::Database;
 
-mod controller;
+mod context;
 mod database;
 mod symbol_converter;
 
 fn main() {
 	let db = Database::load();
-	let ctl = Controller::new(db);
+	let ctl = Context::new(db);
 }
