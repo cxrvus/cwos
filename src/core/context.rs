@@ -1,15 +1,19 @@
-use super::database::Database;
+use super::{database::Database, symbol::SymbolConverter};
 
 // todo: implement Peripherals as <T, U>
 // with fn tick(msg: T) -> U
 
 #[derive(Default)]
 pub struct CwContext {
-	database: Database,
+	pub database: Database,
+	pub symbol: SymbolConverter,
 }
 
 impl CwContext {
 	pub fn new(db: Database) -> Self {
-		Self { database: db }
+		Self {
+			database: db,
+			..Default::default()
+		}
 	}
 }

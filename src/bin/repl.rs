@@ -2,7 +2,6 @@ use cwos::core::{
 	context::CwContext,
 	database::Database,
 	routine::{Echo, Routine},
-	symbol::Symbol,
 };
 use std::io::{self, Read};
 use termion::raw::IntoRawMode;
@@ -16,16 +15,20 @@ pub fn main() {
 
 	for byte in stdin.bytes() {
 		match byte {
-			Ok(input_byte) => {
-				// Ctrl+C
+			Ok(mut input_byte) => {
 				if input_byte == 3 {
-					break;
+					break; // Ctrl+C
+				}
+
+				if input_byte == b'\r' {
+					input_byte = b'\n';
 				}
 
 				println!("\r<< {}", input_byte as char);
 
-				let input = Symbol::Sign(input_byte.into());
-				let output = controller.tick(&mut ctx, input).to_string();
+				let input = ctx.symbol.from_char(input_byte.into()).unwrap();
+				let response = controller.tick(&mut ctx, input);
+				let output = ctx.symbol.to_char(response);
 
 				println!("\r>> {}", output);
 			}

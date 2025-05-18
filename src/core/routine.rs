@@ -9,11 +9,11 @@ pub struct Greeting {
 }
 
 impl Routine for Greeting {
-	fn tick(&mut self, _: &mut CwContext, _: Symbol) -> Symbol {
+	fn tick(&mut self, ctx: &mut CwContext, _: Symbol) -> Symbol {
 		if let Some(c) = self.message.chars().next() {
-			Symbol::Sign(c)
+			ctx.symbol.from_char(c).unwrap()
 		} else {
-			Symbol::Break
+			Symbol::Space
 		}
 	}
 }
