@@ -6,6 +6,10 @@ use cwos::core::{
 use std::io::{self, Read};
 use termion::raw::IntoRawMode;
 
+// idea: add clap
+// idea: provide config as file
+// idea: add modes: dot/dash mode, string mode etc
+
 pub fn main() {
 	let stdin = io::stdin();
 	let _stdout = io::stdout().into_raw_mode().unwrap();
