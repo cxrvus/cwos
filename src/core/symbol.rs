@@ -61,7 +61,7 @@ impl Default for SymbolConverter {
 				symbol,
 				group,
 				char,
-				pulse: PulseSymbol::from_str(pulse_str),
+				pulse: PulseSymbol::from_dot_str(pulse_str),
 			})
 			.collect();
 
@@ -76,7 +76,7 @@ pub enum PulseSymbol {
 }
 
 impl PulseSymbol {
-	pub fn from_str(pulse_str: &str) -> Self {
+	pub fn from_dot_str(pulse_str: &str) -> Self {
 		if pulse_str.is_empty() {
 			return Self::Break;
 		}
