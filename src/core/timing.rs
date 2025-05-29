@@ -18,6 +18,7 @@ pub enum Signal {
 	Off,      // e.g. a speaker seizing to beep
 }
 
+#[derive(Default)]
 pub struct CwInput {
 	symbol_conv: SymbolConverter,
 	config: TimingConfig,
@@ -104,6 +105,12 @@ impl From<Config> for TimingConfig {
 			user: TimingPulseConfig::from(config.user),
 			comp: TimingPulseConfig::from(config.comp),
 		}
+	}
+}
+
+impl Default for TimingConfig {
+	fn default() -> Self {
+		Self::from(Config::default())
 	}
 }
 
