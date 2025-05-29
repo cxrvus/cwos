@@ -7,7 +7,7 @@ struct SymbolSpec {
 	symbol: Symbol,
 	group: Group,
 	char: char,
-	pulse: PulseSymbol,
+	signals: Signals,
 }
 
 pub struct SymbolConverter {
@@ -15,11 +15,11 @@ pub struct SymbolConverter {
 }
 
 impl SymbolConverter {
-	pub fn from_pulse(&self, pulse: PulseSymbol) -> Result<Symbol> {
-		if let Some(spec) = self.symbol_map.iter().find(|spec| spec.pulse == pulse) {
+	pub fn from_signals(&self, signals: Signals) -> Result<Symbol> {
+		if let Some(spec) = self.symbol_map.iter().find(|spec| spec.signals == signals) {
 			Ok(spec.symbol.clone())
 		} else {
-			Err(anyhow!("invalid CW sequence: {}", pulse.to_string()))
+			Err(anyhow!("invalid CW sequence: {}", signals.to_string()))
 		}
 	}
 
@@ -43,12 +43,12 @@ impl SymbolConverter {
 			.char
 	}
 
-	pub fn to_pulse(&self, symbol: &Symbol) -> PulseSymbol {
+	pub fn to_signals(&self, symbol: &Symbol) -> Signals {
 		self.symbol_map
 			.iter()
 			.find(|spec| spec.symbol == *symbol)
 			.unwrap()
-			.pulse
+			.signals
 			.clone()
 	}
 }
@@ -57,11 +57,11 @@ impl Default for SymbolConverter {
 	fn default() -> Self {
 		let symbol_map = SYMBOL_SPEC
 			.into_iter()
-			.map(|(char, pulse_str, group, symbol)| SymbolSpec {
+			.map(|(char, signal_str, group, symbol)| SymbolSpec {
 				symbol,
 				group,
 				char,
-				pulse: PulseSymbol::from_dot_str(pulse_str),
+				signals: Signals::from_dot_str(signal_str),
 			})
 			.collect();
 
@@ -70,38 +70,38 @@ impl Default for SymbolConverter {
 }
 
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub struct PulseSymbol(pub Vec<bool>);
+pub struct Signals(pub Vec<bool>);
 
-impl PulseSymbol {
-	pub fn from_dot_str(pulse_str: &str) -> Self {
-		if pulse_str.is_empty() {
+impl Signals {
+	pub fn from_dot_str(signal_str: &str) -> Self {
+		if signal_str.is_empty() {
 			return Self::default();
 		}
 
-		let mut pulses = vec![];
+		let mut signals = vec![];
 
-		for pulse_char in pulse_str.chars() {
-			let pulse = match pulse_char {
+		for signal_char in signal_str.chars() {
+			let signal = match signal_char {
 				'.' => false,
 				'-' => true,
 				_ => panic!("char may only be '.' or '-'"),
 			};
 
-			pulses.push(pulse);
+			signals.push(signal);
 		}
 
-		Self(pulses)
+		Self(signals)
 	}
 }
 
-impl fmt::Display for PulseSymbol {
+impl fmt::Display for Signals {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		let s = if self.0.is_empty() {
 			" / ".to_string()
 		} else {
 			self.0
 				.iter()
-				.map(|&pulse| if pulse { "-" } else { "." })
+				.map(|&signal| if signal { "-" } else { "." })
 				.collect::<String>()
 		};
 

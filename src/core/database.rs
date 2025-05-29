@@ -7,29 +7,29 @@ pub struct Database {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-	pub user: PulseConfig,
-	pub comp: PulseConfig,
+	pub user: SignalConfig,
+	pub comp: SignalConfig,
 }
 
 impl Default for Config {
 	fn default() -> Self {
 		Self {
-			user: PulseConfig {
+			user: SignalConfig {
 				wpm: 15,
 				fw_wpm: 10,
 				freq: 600,
 			},
-			comp: PulseConfig {
+			comp: SignalConfig {
 				wpm: 20,
 				fw_wpm: 10,
-				freq: 800,
+				freq: 700,
 			},
 		}
 	}
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct PulseConfig {
+pub struct SignalConfig {
 	pub wpm: u32,
 	pub fw_wpm: u32, // Fansworth
 	pub freq: u32,
