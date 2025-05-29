@@ -28,7 +28,7 @@ impl Default for Config {
 	}
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
 pub struct SignalConfig {
 	pub wpm: u32,
 	pub fw_wpm: u32, // Fansworth

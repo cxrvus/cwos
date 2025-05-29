@@ -1,96 +1,111 @@
 use anyhow::{anyhow, Result};
 
 use super::{
+	context::CwContext,
 	database::{Config, SignalConfig},
-	symbol::{Signals, Symbol, SymbolConverter},
+	routine::Routine,
+	symbol::{self, Signals, Symbol},
 };
 
+#[derive(Default)]
 pub enum Role {
+	#[default]
 	User,
 	Comp,
 }
 
-pub enum SignalChange {
-	Remain,   // remaining in the current state
-	On(Role), // e.g. a speaker starting to beep - the Role can be used to set the beep frequency
-	Off,      // e.g. a speaker seizing to beep
+pub enum SignalState {
+	Remain, // remaining in the current state
+	On,     // e.g. a speaker starting to beep
+	Off,    // e.g. a speaker seizing to beep
 }
 
 #[derive(Default)]
-pub struct SignalController {
-	symbol_conv: SymbolConverter,
+pub struct SignalController<T: Default, R: Routine<T>> {
 	user_config: SignalMsConfig,
 	comp_config: SignalMsConfig,
+	ctx: CwContext<T>,
+	routine: R,
 	elapsed_ms: u32,
-	user_signal_buffer: Vec<bool>,
-	comp_symbol: Option<Symbol>,
+	active_role: Role,
+	signal_buffer: Signals,
+	symbol_buffer: Vec<Symbol>,
 }
 
-impl SignalController {
-	pub fn new(config: Config) -> Self {
+impl<T: Default, R: Routine<T>> SignalController<T, R> {
+	const PAUSE_MS: u32 = 1000;
+
+	pub fn new(config: &Config, routine: R, ctx: CwContext<T>) -> Self {
 		Self {
 			user_config: SignalMsConfig::from(config.user),
 			comp_config: SignalMsConfig::from(config.comp),
+			ctx,
+			routine,
 			..Default::default()
 		}
 	}
 
-	pub fn set_comp_symbol(&mut self, symbol: Symbol) -> Result<()> {
-		if let Some(current_symbol) = &self.comp_symbol {
-			Err(anyhow!(
-				"computer is already sending a symbol: '{}'",
-				self.symbol_conv.to_char(current_symbol)
-			))
-		} else {
-			self.comp_symbol = Some(symbol);
-			Ok(())
-		}
-	}
-
-	pub fn tick(&mut self, delta: u32, user_signal: bool) -> (SignalChange, Option<Symbol>) {
+	pub fn tick(&mut self, delta: u32, user_signal: bool) -> SignalState {
 		self.elapsed_ms += delta;
 
-		let last_user_signal = self.user_signal_buffer.last().unwrap_or(&false);
+		let last_user_signal = self.signal_buffer.0.last().unwrap_or(&false);
 
-		match (last_user_signal, user_signal) {
+		let signal_state = match (last_user_signal, user_signal) {
 			(false, true) => {
-				let symbol = if self.elapsed_ms >= self.user_config.space_ms {
-					self.elapsed_ms = 0;
-					Some(Symbol::Void)
-				} else {
-					None
-				};
+				if let Role::Comp = self.active_role {
+					self.signal_buffer.0.clear();
+					self.symbol_buffer.clear();
 
-				(SignalChange::On(Role::User), symbol)
-			}
-			(true, false) => {
-				if self.elapsed_ms >= self.user_config.dah_ms {
-					self.user_signal_buffer.push(true);
-				} else if self.elapsed_ms >= self.user_config.dit_ms {
-					self.user_signal_buffer.push(false);
+					self.active_role = Role::User;
 				}
 
 				self.elapsed_ms = 0;
 
-				(SignalChange::Off, None)
+				SignalState::On
 			}
-			(true, true) => (SignalChange::Remain, None),
-			(false, false) => {
-				if self.elapsed_ms >= self.user_config.space_ms {
-					self.elapsed_ms = 0;
-					self.comp_symbol = None; // we may receive new comp input, now that the user is done sending
-
-					let signals = Signals(self.user_signal_buffer.clone());
-					self.user_signal_buffer.clear();
-					(
-						SignalChange::Remain,
-						Some(self.symbol_conv.from_signals(signals).unwrap()), // fixme: unwrap
-					)
-				} else {
-					(SignalChange::Remain, None)
+			(true, false) => {
+				if self.elapsed_ms >= self.user_config.dah_ms {
+					self.signal_buffer.0.push(true);
+				} else if self.elapsed_ms >= self.user_config.dit_ms {
+					self.signal_buffer.0.push(false);
 				}
+
+				self.elapsed_ms = 0;
+
+				SignalState::Off
 			}
-		}
+			(true, true) => SignalState::Remain,
+			(false, false) => {
+				if let Role::User = self.active_role {
+					if self.elapsed_ms >= self.user_config.break_ms
+						&& !self.signal_buffer.0.is_empty()
+					{
+						let symbol = self.ctx.symbol.from_signals(self.signal_buffer.clone());
+						self.symbol_buffer.push(symbol);
+						self.signal_buffer.0.clear();
+					}
+
+					if self.elapsed_ms >= self.user_config.space_ms {
+						if let Some(symbol) = self.symbol_buffer.last() {
+							if *symbol != Symbol::Space {
+								self.symbol_buffer.push(Symbol::Space);
+							}
+						}
+					}
+
+					if self.elapsed_ms >= Self::PAUSE_MS {
+						let response = self.routine.tick(&mut self.ctx, self.symbol_buffer.clone());
+						self.symbol_buffer = response;
+						self.active_role = Role::Comp;
+						self.elapsed_ms = 0;
+					}
+				}
+
+				SignalState::Remain
+			}
+		};
+
+		signal_state
 	}
 }
 

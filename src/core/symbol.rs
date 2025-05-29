@@ -15,11 +15,11 @@ pub struct SymbolConverter {
 }
 
 impl SymbolConverter {
-	pub fn from_signals(&self, signals: Signals) -> Result<Symbol> {
+	pub fn from_signals(&self, signals: Signals) -> Symbol {
 		if let Some(spec) = self.symbol_map.iter().find(|spec| spec.signals == signals) {
-			Ok(spec.symbol.clone())
+			spec.symbol.clone()
 		} else {
-			Err(anyhow!("invalid CW sequence: {}", signals.to_string()))
+			Symbol::Invalid
 		}
 	}
 
@@ -35,12 +35,20 @@ impl SymbolConverter {
 		}
 	}
 
+	pub fn from_str(&self, string: &str) -> Result<Vec<Symbol>> {
+		string.chars().map(|c| self.from_char(c)).collect()
+	}
+
 	pub fn to_char(&self, symbol: &Symbol) -> char {
 		self.symbol_map
 			.iter()
 			.find(|spec| spec.symbol == *symbol)
 			.unwrap()
 			.char
+	}
+
+	pub fn as_string(&self, symbols: Vec<Symbol>) -> String {
+		symbols.iter().map(|symbol| self.to_char(symbol)).collect()
 	}
 
 	pub fn to_signals(&self, symbol: &Symbol) -> Signals {
@@ -120,7 +128,7 @@ enum Group {
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
 pub enum Symbol {
 	#[default]
-	Void,
+	Space,
 	A,
 	B,
 	C,
@@ -184,7 +192,7 @@ pub enum Symbol {
 
 #[rustfmt::skip]
 const SYMBOL_SPEC: [(char, &str, Group, Symbol); 60] = [
-	(' ',	"",			Group::Void,	Symbol::Void),
+	(' ',	"",			Group::Void,	Symbol::Space),
 	('A',	".-",		Group::Letter,	Symbol::A),
 	('B',	"-...",		Group::Letter,	Symbol::B),
 	('C',	"-.-.",		Group::Letter,	Symbol::C),
