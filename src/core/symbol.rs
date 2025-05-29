@@ -3,6 +3,7 @@ use anyhow::{anyhow, Result};
 // idea: remove std stuff for embedded
 use std::fmt::{self, Formatter};
 
+#[derive(Clone)]
 struct SymbolSpec {
 	symbol: Symbol,
 	group: Group,
@@ -10,13 +11,14 @@ struct SymbolSpec {
 	signals: Signals,
 }
 
+#[derive(Clone)]
 pub struct SymbolConverter {
 	symbol_map: Vec<SymbolSpec>,
 }
 
 impl SymbolConverter {
-	pub fn from_signals(&self, signals: Signals) -> Symbol {
-		if let Some(spec) = self.symbol_map.iter().find(|spec| spec.signals == signals) {
+	pub fn from_signals(&self, signals: &Signals) -> Symbol {
+		if let Some(spec) = self.symbol_map.iter().find(|spec| spec.signals == *signals) {
 			spec.symbol.clone()
 		} else {
 			Symbol::Invalid
@@ -117,6 +119,7 @@ impl fmt::Display for Signals {
 	}
 }
 
+#[derive(Clone)]
 enum Group {
 	Letter,
 	Number,
