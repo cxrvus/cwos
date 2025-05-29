@@ -172,7 +172,7 @@ pub enum Symbol {
 	Minus,
 	Dollar,
 	At,
-	Tilde,
+	Invalid,
 	Correction,
 	Wait,
 	Start,
@@ -236,7 +236,7 @@ const SYMBOL_SPEC: [(char, &str, Group, Symbol); 60] = [
 	('-',	"-....-",	Group::Special,	Symbol::Minus),
 	('$',	"...-..-",	Group::Special,	Symbol::Dollar),
 	('@',	".--.-.",	Group::Special,	Symbol::At),
-	('~',	".-.-.-.",	Group::Special,	Symbol::Tilde),
+	('~',	".-.-.-.",	Group::Special,	Symbol::Invalid),		// for undefined rhythms
 	('*',	"........",	Group::Prosign,	Symbol::Correction),	// [HH]
 	('^',	".-...",	Group::Prosign,	Symbol::Wait),			// [AS]
 	('{',	"-.-.-",	Group::Prosign,	Symbol::Start),			// [CT] commencing transmission
