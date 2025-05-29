@@ -1,33 +1,36 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
-	unit_ms: u32,
-	break_units: u32, // for Fansworth timing
-	user_freq: u32,
-	comp_freq: u32, // defaults to user_freq
-	output_modes: OutputModes,
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct Database {
+	config: Config,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
-struct OutputModes {
-	light: bool,
-	debug: bool,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Config {
+	pub user: PulseConfig,
+	pub comp: PulseConfig,
 }
 
 impl Default for Config {
 	fn default() -> Self {
 		Self {
-			unit_ms: 60,
-			break_units: 5,
-			user_freq: 600,
-			comp_freq: 800,
-			output_modes: Default::default(),
+			user: PulseConfig {
+				wpm: 15,
+				fw_wpm: 10,
+				freq: 600,
+			},
+			comp: PulseConfig {
+				wpm: 20,
+				fw_wpm: 10,
+				freq: 800,
+			},
 		}
 	}
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct Database {
-	config: Config,
+pub struct PulseConfig {
+	pub wpm: u32,
+	pub fw_wpm: u32, // Fansworth
+	pub freq: u32,
 }
