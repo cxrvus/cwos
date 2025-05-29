@@ -32,7 +32,7 @@ pub fn main() {
 
 				let input = ctx.symbol.from_char(input_byte.into()).unwrap();
 				let response = controller.tick(&mut ctx, input);
-				let output = ctx.symbol.to_char(response);
+				let output = ctx.symbol.to_char(&response);
 
 				println!("\r>> {}", output);
 			}

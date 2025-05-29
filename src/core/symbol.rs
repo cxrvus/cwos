@@ -35,18 +35,18 @@ impl SymbolConverter {
 		}
 	}
 
-	pub fn to_char(&self, symbol: Symbol) -> char {
+	pub fn to_char(&self, symbol: &Symbol) -> char {
 		self.symbol_map
 			.iter()
-			.find(|spec| spec.symbol == symbol)
+			.find(|spec| spec.symbol == *symbol)
 			.unwrap()
 			.char
 	}
 
-	pub fn to_pulse(&self, symbol: Symbol) -> PulseSymbol {
+	pub fn to_pulse(&self, symbol: &Symbol) -> PulseSymbol {
 		self.symbol_map
 			.iter()
-			.find(|spec| spec.symbol == symbol)
+			.find(|spec| spec.symbol == *symbol)
 			.unwrap()
 			.pulse
 			.clone()
@@ -69,16 +69,13 @@ impl Default for SymbolConverter {
 	}
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub enum PulseSymbol {
-	Pulses(Vec<bool>),
-	Break,
-}
+#[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
+pub struct PulseSymbol(pub Vec<bool>);
 
 impl PulseSymbol {
 	pub fn from_dot_str(pulse_str: &str) -> Self {
 		if pulse_str.is_empty() {
-			return Self::Break;
+			return Self::default();
 		}
 
 		let mut pulses = vec![];
@@ -93,19 +90,21 @@ impl PulseSymbol {
 			pulses.push(pulse);
 		}
 
-		Self::Pulses(pulses)
+		Self(pulses)
 	}
 }
 
 impl fmt::Display for PulseSymbol {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		let s = match self {
-			Self::Break => " / ".to_string(),
-			Self::Pulses(pulses) => pulses
+		let s = if self.0.is_empty() {
+			" / ".to_string()
+		} else {
+			self.0
 				.iter()
 				.map(|&pulse| if pulse { "-" } else { "." })
-				.collect::<String>(),
+				.collect::<String>()
 		};
+
 		write!(f, "{}", s)
 	}
 }
@@ -118,9 +117,10 @@ enum Group {
 	Void,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
 pub enum Symbol {
-	Space,
+	#[default]
+	Void,
 	A,
 	B,
 	C,
@@ -184,7 +184,7 @@ pub enum Symbol {
 
 #[rustfmt::skip]
 const SYMBOL_SPEC: [(char, &str, Group, Symbol); 60] = [
-	(' ',	"",			Group::Void,	Symbol::Space),
+	(' ',	"",			Group::Void,	Symbol::Void),
 	('A',	".-",		Group::Letter,	Symbol::A),
 	('B',	"-...",		Group::Letter,	Symbol::B),
 	('C',	"-.-.",		Group::Letter,	Symbol::C),

@@ -13,7 +13,7 @@ impl<T> Routine<T> for Greeting {
 		if let Some(c) = self.message.chars().next() {
 			ctx.symbol.from_char(c).unwrap()
 		} else {
-			Symbol::Space
+			Symbol::Void
 		}
 	}
 }
