@@ -22,8 +22,8 @@ struct Signal {
 
 #[derive(Default)]
 pub struct SignalController<T: Default, R: Routine<T>> {
-	user_config: SignalMsConfig,
-	comp_config: SignalMsConfig,
+	user_config: SignalElementConfig,
+	comp_config: SignalElementConfig,
 	ctx: CwContext<T>,
 	routine: R,
 	active_role: Role,
@@ -37,8 +37,8 @@ impl<T: Default, R: Routine<T>> SignalController<T, R> {
 
 	pub fn new(config: &Config, routine: R, ctx: CwContext<T>) -> Self {
 		Self {
-			user_config: SignalMsConfig::from(config.user),
-			comp_config: SignalMsConfig::from(config.comp),
+			user_config: SignalElementConfig::from(config.user_signal),
+			comp_config: SignalElementConfig::from(config.comp_signal),
 			ctx,
 			routine,
 			..Default::default()
@@ -124,7 +124,7 @@ impl<T: Default, R: Routine<T>> SignalController<T, R> {
 
 	fn signals_to_symbols(
 		conv: &SymbolConverter,
-		config: &SignalMsConfig,
+		config: &SignalElementConfig,
 		signals: Vec<Signal>,
 	) -> Vec<Symbol> {
 		let mut elements: SignalElements = SignalElements(vec![]);
@@ -152,7 +152,7 @@ impl<T: Default, R: Routine<T>> SignalController<T, R> {
 
 	fn symbols_to_signals(
 		conv: &SymbolConverter,
-		config: &SignalMsConfig,
+		config: &SignalElementConfig,
 		symbols: Vec<Symbol>,
 	) -> Vec<Signal> {
 		let mut signals: Vec<Signal> = vec![];
@@ -206,29 +206,22 @@ impl<T: Default, R: Routine<T>> SignalController<T, R> {
 }
 
 #[derive(Default)]
-struct SignalMsConfig {
+struct SignalElementConfig {
 	dit_ms: u32,
 	dah_ms: u32,
 	break_ms: u32,
 	space_ms: u32,
 }
 
-impl From<SignalConfig> for SignalMsConfig {
+impl From<SignalConfig> for SignalElementConfig {
 	fn from(config: SignalConfig) -> Self {
-		let unit_ms = wpm_to_ms(config.wpm);
-		let fw_unit_ms = wpm_to_ms(config.fw_wpm); // Fansworth
+		let SignalConfig { unit_ms, fw_ms } = config;
 
 		Self {
 			dit_ms: unit_ms,
 			dah_ms: unit_ms * 3,
-			break_ms: fw_unit_ms * 3,
-			space_ms: fw_unit_ms * 7,
+			break_ms: fw_ms * 3,
+			space_ms: fw_ms * 7,
 		}
 	}
-}
-
-fn wpm_to_ms(wpm: u32) -> u32 {
-	// the 1200 represents the milliseconds per word according to the PARIS standard:
-	// 1200 = 60000 [ms in a minute] / 50 [units in the word "PARIS"]
-	1200 / wpm
 }
