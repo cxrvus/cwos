@@ -33,7 +33,7 @@ pub struct SignalController<T: Default, R: Routine<T>> {
 }
 
 impl<T: Default, R: Routine<T>> SignalController<T, R> {
-	pub const MAX_MS: u32 = 1000;
+	pub const MAX_MS: u32 = 3000;
 
 	pub fn new(config: &Config, routine: R, ctx: CwContext<T>) -> Self {
 		Self {
