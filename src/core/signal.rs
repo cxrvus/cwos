@@ -6,10 +6,10 @@ use super::{
 };
 
 #[derive(Default)]
-pub enum Role {
+pub enum Mode {
 	#[default]
-	Comp,
-	User,
+	Output,
+	Input,
 }
 
 pub struct OutputState(pub bool);
@@ -22,11 +22,11 @@ struct Signal {
 
 #[derive(Default)]
 pub struct SignalController<T: Default, P: Procedure<T>> {
-	user_config: SignalElementConfig,
-	comp_config: SignalElementConfig,
+	input_config: SignalElementConfig,
+	output_config: SignalElementConfig,
 	ctx: CwContext<T>,
 	procedure: P,
-	active_role: Role,
+	active_role: Mode,
 	last_input_state: bool,
 	buffer: Vec<Signal>,
 	elapsed_ms: u32,
@@ -37,8 +37,8 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 
 	pub fn new(config: &Config, procedure: P, ctx: CwContext<T>) -> Self {
 		Self {
-			user_config: SignalElementConfig::from(config.user_signal),
-			comp_config: SignalElementConfig::from(config.comp_signal),
+			input_config: SignalElementConfig::from(config.input.signal),
+			output_config: SignalElementConfig::from(config.output.signal),
 			ctx,
 			procedure,
 			..Default::default()
@@ -48,21 +48,21 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 	pub fn tick(&mut self, input_state: bool, delta_ms: u32) -> OutputState {
 		self.elapsed_ms += delta_ms;
 
-		if let Role::Comp = self.active_role {
+		if let Mode::Output = self.active_role {
 			if input_state {
 				// if the user inputs the signal, put them back into control
 				self.buffer.clear();
-				self.active_role = Role::User;
-				self.user_tick(input_state)
+				self.active_role = Mode::Input;
+				self.input_tick(input_state)
 			} else {
-				self.comp_tick()
+				self.output_tick()
 			}
 		} else {
-			self.user_tick(input_state)
+			self.input_tick(input_state)
 		}
 	}
 
-	fn user_tick(&mut self, input_state: bool) -> OutputState {
+	fn input_tick(&mut self, input_state: bool) -> OutputState {
 		match (self.last_input_state, input_state) {
 			(false, true) | (true, false) => {
 				// the if-clause prevents adding an Off-Signal duration to an empty duration buffer
@@ -77,21 +77,21 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 			}
 			(false, false) => {
 				// if the user is idle for long enough (but the buffer is not empty, meaning that signals have been transmitted)
-				// then send the user's buffer to the computer and return control
+				// then pass the input buffer to the procedure and return control
 				if !self.buffer.is_empty() && self.elapsed_ms >= Self::MAX_MS {
 					let conv = &self.ctx.symbol.clone();
 
 					let input_signals = self.buffer.clone();
 					let input_symbols =
-						Self::signals_to_symbols(conv, &self.user_config, input_signals);
+						Self::signals_to_symbols(conv, &self.input_config, input_signals);
 
 					let output_symbols = self.procedure.tick(&mut self.ctx, input_symbols);
 					let output_signals =
-						Self::symbols_to_signals(conv, &self.comp_config, output_symbols);
+						Self::symbols_to_signals(conv, &self.output_config, output_symbols);
 
 					self.buffer = output_signals;
 
-					self.active_role = Role::Comp;
+					self.active_role = Mode::Output;
 					self.elapsed_ms = 0;
 				}
 			}
@@ -101,7 +101,7 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 		OutputState(input_state)
 	}
 
-	fn comp_tick(&mut self) -> OutputState {
+	fn output_tick(&mut self) -> OutputState {
 		if let Some(signal) = self.buffer.first() {
 			let output_state = signal.is_on;
 
@@ -116,7 +116,7 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 			OutputState(output_state)
 		} else {
 			self.elapsed_ms = 0;
-			self.active_role = Role::User;
+			self.active_role = Mode::Input;
 
 			OutputState(false)
 		}
@@ -215,7 +215,7 @@ struct SignalElementConfig {
 
 impl From<SignalConfig> for SignalElementConfig {
 	fn from(config: SignalConfig) -> Self {
-		let SignalConfig { unit_ms, fw_ms } = config;
+		let SignalConfig { unit_ms, fw_ms, .. } = config;
 
 		Self {
 			dit_ms: unit_ms,

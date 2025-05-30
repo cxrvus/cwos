@@ -16,25 +16,26 @@ pub fn wpm_to_ms(wpm: u32) -> u32 {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-	pub user_signal: SignalConfig,
-	pub comp_signal: SignalConfig,
+	pub input: InputConfig,
 	pub output: OutputConfig,
 }
 
 impl Default for Config {
 	fn default() -> Self {
 		Self {
-			user_signal: SignalConfig {
-				unit_ms: wpm!(15),
-				fw_ms: wpm!(10),
-			},
-			comp_signal: SignalConfig {
-				unit_ms: wpm!(20),
-				fw_ms: wpm!(10),
-			},
 			output: OutputConfig {
-				user_freq: 500,
-				comp_freq: 600,
+				signal: SignalConfig {
+					unit_ms: wpm!(20),
+					fw_ms: wpm!(10),
+					freq: 600,
+				},
+			},
+			input: InputConfig {
+				signal: SignalConfig {
+					unit_ms: wpm!(15),
+					fw_ms: wpm!(10),
+					freq: 500,
+				},
 			},
 		}
 	}
@@ -46,10 +47,16 @@ pub struct SignalConfig {
 	pub unit_ms: u32,
 	/// Fansworth ms per unit
 	pub fw_ms: u32,
+	/// beep frequency
+	pub freq: u32,
 }
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
 pub struct OutputConfig {
-	pub user_freq: u32,
-	pub comp_freq: u32,
+	pub signal: SignalConfig,
+}
+
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+pub struct InputConfig {
+	pub signal: SignalConfig,
 }
