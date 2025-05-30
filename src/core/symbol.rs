@@ -169,87 +169,76 @@ impl TryFrom<String> for SymbolString {
 	type Error = anyhow::Error;
 }
 
-struct SymbolSpec(char, ElementString, Group, Symbol);
+struct SymbolSpec(char, &'static str, Group, Symbol);
 
 #[rustfmt::skip]
 impl SymbolSpec {
 	pub fn character(&self) -> char { self.0 }
-	pub fn elements(&self) -> ElementString { self.1.clone() }
+	pub fn elements(&self) -> ElementString { ElementString::from(self.1.to_string()) }
 	pub fn group(&self) -> Group { self.2.clone() }
 	pub fn symbol(&self) -> Symbol { self.3.clone() }
 }
 
-/// Placeholder
-#[macro_export]
-macro_rules! cw {
-	($($tt:tt)*) => {
-		ElementString(vec![])
-	};
-	() => {
-		ElementString(vec![])
-	};
-}
-
 #[rustfmt::skip]
 static SYMBOL_SPEC: [SymbolSpec; 60] = [
-	SymbolSpec(' ',		cw!(),				Group::Void,		Symbol::Space),
-	SymbolSpec('A',		cw!(.-),			Group::Letter,		Symbol::A),
-	SymbolSpec('B',		cw!(-...),			Group::Letter,		Symbol::B),
-	SymbolSpec('C',		cw!(-.-.),			Group::Letter,		Symbol::C),
-	SymbolSpec('D',		cw!(-..),			Group::Letter,		Symbol::D),
-	SymbolSpec('E',		cw!(.),				Group::Letter,		Symbol::E),
-	SymbolSpec('F',		cw!(..-.),			Group::Letter,		Symbol::F),
-	SymbolSpec('G',		cw!(--.),			Group::Letter,		Symbol::G),
-	SymbolSpec('H',		cw!(....),			Group::Letter,		Symbol::H),
-	SymbolSpec('I',		cw!(..),			Group::Letter,		Symbol::I),
-	SymbolSpec('J',		cw!(.---),			Group::Letter,		Symbol::J),
-	SymbolSpec('K',		cw!(-.-),			Group::Letter,		Symbol::K),
-	SymbolSpec('L',		cw!(.-..),			Group::Letter,		Symbol::L),
-	SymbolSpec('M',		cw!(--),			Group::Letter,		Symbol::M),
-	SymbolSpec('N',		cw!(-.),			Group::Letter,		Symbol::N),
-	SymbolSpec('O',		cw!(---),			Group::Letter,		Symbol::O),
-	SymbolSpec('P',		cw!(.--.),			Group::Letter,		Symbol::P),
-	SymbolSpec('Q',		cw!(--.-),			Group::Letter,		Symbol::Q),
-	SymbolSpec('R',		cw!(.-.),			Group::Letter,		Symbol::R),
-	SymbolSpec('S',		cw!(...),			Group::Letter,		Symbol::S),
-	SymbolSpec('T',		cw!(-),				Group::Letter,		Symbol::T),
-	SymbolSpec('U',		cw!(..-),			Group::Letter,		Symbol::U),
-	SymbolSpec('V',		cw!(...-),			Group::Letter,		Symbol::V),
-	SymbolSpec('W',		cw!(.--),			Group::Letter,		Symbol::W),
-	SymbolSpec('X',		cw!(-..-),			Group::Letter,		Symbol::X),
-	SymbolSpec('Y',		cw!(-.--),			Group::Letter,		Symbol::Y),
-	SymbolSpec('Z',		cw!(--..),			Group::Letter,		Symbol::Z),
-	SymbolSpec('0',		cw!(-----),			Group::Number,		Symbol::_0),
-	SymbolSpec('1',		cw!(.----),			Group::Number,		Symbol::_1),
-	SymbolSpec('2',		cw!(..---),			Group::Number,		Symbol::_2),
-	SymbolSpec('3',		cw!(...--),			Group::Number,		Symbol::_3),
-	SymbolSpec('4',		cw!(....-),			Group::Number,		Symbol::_4),
-	SymbolSpec('5',		cw!(.....),			Group::Number,		Symbol::_5),
-	SymbolSpec('6',		cw!(-....),			Group::Number,		Symbol::_6),
-	SymbolSpec('7',		cw!(--...),			Group::Number,		Symbol::_7),
-	SymbolSpec('8',		cw!(---..),			Group::Number,		Symbol::_8),
-	SymbolSpec('9',		cw!(----.),			Group::Number,		Symbol::_9),
-	SymbolSpec('.',		cw!(.-.-.-),		Group::Special,		Symbol::Period),
-	SymbolSpec(',',		cw!(--..--),		Group::Special,		Symbol::Comma),
-	SymbolSpec('?',		cw!(..--..),		Group::Special,		Symbol::Question),
-	SymbolSpec('!',		cw!(-.-.--),		Group::Special,		Symbol::Exclamation),
-	SymbolSpec('/',		cw!(-..-.),			Group::Special,		Symbol::Slash),
-	SymbolSpec('(',		cw!(-.--.),			Group::Special,		Symbol::ParenthesisOpen),
-	SymbolSpec(')',		cw!(-.--.-),		Group::Special,		Symbol::ParenthesisClose),
-	SymbolSpec('&',		cw!(.-...),			Group::Special,		Symbol::Ampersand),
-	SymbolSpec(':',		cw!(---...),		Group::Special,		Symbol::Colon),
-	SymbolSpec(';',		cw!(-.-.-.),		Group::Special,		Symbol::Semicolon),
-	SymbolSpec('=',		cw!(-...-),			Group::Special,		Symbol::Equals),
-	SymbolSpec('+',		cw!(.-.-.),			Group::Special,		Symbol::Plus),
-	SymbolSpec('-',		cw!(-....-),		Group::Special,		Symbol::Minus),
-	SymbolSpec('$',		cw!(...-..-),		Group::Special,		Symbol::Dollar),
-	SymbolSpec('@',		cw!(.--.-.),		Group::Special,		Symbol::At),
-	SymbolSpec('~',		cw!(.-.-.-.),		Group::Special,		Symbol::Invalid),		// for undefined rhythms
-	SymbolSpec('*',		cw!(........),		Group::Prosign,		Symbol::Correction),	// [HH]
-	SymbolSpec('^',		cw!(.-...),			Group::Prosign,		Symbol::Wait),			// [AS]
-	SymbolSpec('{',		cw!(-.-.-),			Group::Prosign,		Symbol::Start),			// [CT] commencing transmission
-	SymbolSpec('}',		cw!(.-.-.),			Group::Prosign,		Symbol::End),			// [AR] end of message
-	SymbolSpec('%',		cw!(...-.-),		Group::Prosign,		Symbol::EndOfContact),	// [VA] end of contact
-	SymbolSpec('\n',	cw!(.-.-),			Group::Prosign,		Symbol::NewLine),		// [RT] 
-	SymbolSpec('#',		cw!(...---...),		Group::Prosign,		Symbol::SOS),			// [SOS]
+	SymbolSpec(' ',		"",			Group::Void,		Symbol::Space),
+	SymbolSpec('A',		".-",		Group::Letter,		Symbol::A),
+	SymbolSpec('B',		"-...",		Group::Letter,		Symbol::B),
+	SymbolSpec('C',		"-.-.",		Group::Letter,		Symbol::C),
+	SymbolSpec('D',		"-..",		Group::Letter,		Symbol::D),
+	SymbolSpec('E',		".",		Group::Letter,		Symbol::E),
+	SymbolSpec('F',		"..-.",		Group::Letter,		Symbol::F),
+	SymbolSpec('G',		"--.",		Group::Letter,		Symbol::G),
+	SymbolSpec('H',		"....",		Group::Letter,		Symbol::H),
+	SymbolSpec('I',		"..",		Group::Letter,		Symbol::I),
+	SymbolSpec('J',		".---",		Group::Letter,		Symbol::J),
+	SymbolSpec('K',		"-.-",		Group::Letter,		Symbol::K),
+	SymbolSpec('L',		".-..",		Group::Letter,		Symbol::L),
+	SymbolSpec('M',		"--",		Group::Letter,		Symbol::M),
+	SymbolSpec('N',		"-.",		Group::Letter,		Symbol::N),
+	SymbolSpec('O',		"---",		Group::Letter,		Symbol::O),
+	SymbolSpec('P',		".--.",		Group::Letter,		Symbol::P),
+	SymbolSpec('Q',		"--.-",		Group::Letter,		Symbol::Q),
+	SymbolSpec('R',		".-.",		Group::Letter,		Symbol::R),
+	SymbolSpec('S',		"...",		Group::Letter,		Symbol::S),
+	SymbolSpec('T',		"-",		Group::Letter,		Symbol::T),
+	SymbolSpec('U',		"..-",		Group::Letter,		Symbol::U),
+	SymbolSpec('V',		"...-",		Group::Letter,		Symbol::V),
+	SymbolSpec('W',		".--",		Group::Letter,		Symbol::W),
+	SymbolSpec('X',		"-..-",		Group::Letter,		Symbol::X),
+	SymbolSpec('Y',		"-.--",		Group::Letter,		Symbol::Y),
+	SymbolSpec('Z',		"--..",		Group::Letter,		Symbol::Z),
+	SymbolSpec('0',		"-----",	Group::Number,		Symbol::_0),
+	SymbolSpec('1',		".----",	Group::Number,		Symbol::_1),
+	SymbolSpec('2',		"..---",	Group::Number,		Symbol::_2),
+	SymbolSpec('3',		"...--",	Group::Number,		Symbol::_3),
+	SymbolSpec('4',		"....-",	Group::Number,		Symbol::_4),
+	SymbolSpec('5',		".....",	Group::Number,		Symbol::_5),
+	SymbolSpec('6',		"-....",	Group::Number,		Symbol::_6),
+	SymbolSpec('7',		"--...",	Group::Number,		Symbol::_7),
+	SymbolSpec('8',		"---..",	Group::Number,		Symbol::_8),
+	SymbolSpec('9',		"----.",	Group::Number,		Symbol::_9),
+	SymbolSpec('.',		".-.-.-",	Group::Special,		Symbol::Period),
+	SymbolSpec(',',		"--..--",	Group::Special,		Symbol::Comma),
+	SymbolSpec('?',		"..--..",	Group::Special,		Symbol::Question),
+	SymbolSpec('!',		"-.-.--",	Group::Special,		Symbol::Exclamation),
+	SymbolSpec('/',		"-..-.",	Group::Special,		Symbol::Slash),
+	SymbolSpec('(',		"-.--.",	Group::Special,		Symbol::ParenthesisOpen),
+	SymbolSpec(')',		"-.--.-",	Group::Special,		Symbol::ParenthesisClose),
+	SymbolSpec('&',		".-...",	Group::Special,		Symbol::Ampersand),
+	SymbolSpec(':',		"---...",	Group::Special,		Symbol::Colon),
+	SymbolSpec(';',		"-.-.-.",	Group::Special,		Symbol::Semicolon),
+	SymbolSpec('=',		"-...-",	Group::Special,		Symbol::Equals),
+	SymbolSpec('+',		".-.-.",	Group::Special,		Symbol::Plus),
+	SymbolSpec('-',		"-....-",	Group::Special,		Symbol::Minus),
+	SymbolSpec('$',		"...-..-",	Group::Special,		Symbol::Dollar),
+	SymbolSpec('@',		".--.-.",	Group::Special,		Symbol::At),
+	SymbolSpec('~',		".-.-.-.",	Group::Special,		Symbol::Invalid), // for undefined rhythms
+	SymbolSpec('*',		"........",	Group::Prosign,		Symbol::Correction), // [HH]
+	SymbolSpec('^',		".-...",	Group::Prosign,		Symbol::Wait), // [AS]
+	SymbolSpec('{',		"-.-.-",	Group::Prosign,		Symbol::Start), // [CT] commencing transmission
+	SymbolSpec('}',		".-.-.",	Group::Prosign,		Symbol::End), // [AR] end of message
+	SymbolSpec('%',		"...-.-",	Group::Prosign,		Symbol::EndOfContact), // [VA] end of contact
+	SymbolSpec('\n',	".-.-",		Group::Prosign,		Symbol::NewLine), // [RT]
+	SymbolSpec('#',		"...---...",	Group::Prosign,		Symbol::SOS), // [SOS]
 ];
