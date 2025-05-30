@@ -8,6 +8,7 @@ macro_rules! wpm {
 }
 
 /// calculates the ms per unit for a given WPM
+#[inline]
 pub fn wpm_to_ms(wpm: u32) -> u32 {
 	// the 1200 represents the milliseconds per word according to the PARIS standard:
 	// 1200 = 60000 [ms in a minute] / 50 [units in the word "PARIS"]
