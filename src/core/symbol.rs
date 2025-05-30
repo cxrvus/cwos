@@ -1,95 +1,22 @@
 use anyhow::{anyhow, Result};
-
-// idea: remove std stuff for embedded
-use std::fmt::{self, Formatter};
-
-#[derive(Clone)]
-pub struct SymbolSpec {
-	symbol: Symbol,
-	group: Group,
-	char: char,
-	elements: SignalElements,
-}
-
-#[derive(Clone)]
-pub struct SymbolConverter {
-	symbol_map: Vec<SymbolSpec>,
-}
-
-impl SymbolConverter {
-	pub fn from_elements(&self, elements: &SignalElements) -> Symbol {
-		if let Some(spec) = self
-			.symbol_map
-			.iter()
-			.find(|spec| spec.elements == *elements)
-		{
-			spec.symbol.clone()
-		} else {
-			Symbol::Invalid
-		}
-	}
-
-	pub fn from_char(&self, char: char) -> Result<Symbol> {
-		if let Some(spec) = self
-			.symbol_map
-			.iter()
-			.find(|spec| spec.char == char.to_ascii_uppercase())
-		{
-			Ok(spec.symbol.clone())
-		} else {
-			Err(anyhow!("invalid plaintext char: {:?}", char))
-		}
-	}
-
-	pub fn from_str(&self, string: &str) -> Result<Vec<Symbol>> {
-		string.chars().map(|c| self.from_char(c)).collect()
-	}
-
-	pub fn to_char(&self, symbol: &Symbol) -> char {
-		self.get_spec(symbol).char
-	}
-
-	pub fn as_string(&self, symbols: Vec<Symbol>) -> String {
-		symbols.iter().map(|symbol| self.to_char(symbol)).collect()
-	}
-
-	pub fn to_elements(&self, symbol: &Symbol) -> SignalElements {
-		self.get_spec(symbol).elements.clone()
-	}
-
-	pub fn get_group(&self, symbol: &Symbol) -> &Group {
-		&self.get_spec(symbol).group
-	}
-
-	pub fn get_spec(&self, symbol: &Symbol) -> &SymbolSpec {
-		self.symbol_map
-			.iter()
-			.find(|spec| spec.symbol == *symbol)
-			.unwrap()
-	}
-}
-
-impl Default for SymbolConverter {
-	fn default() -> Self {
-		let symbol_map = SYMBOL_SPEC
-			.into_iter()
-			.map(|(char, element_str, group, symbol)| SymbolSpec {
-				symbol,
-				group,
-				char,
-				elements: SignalElements::from_dot_str(element_str),
-			})
-			.collect();
-
-		Self { symbol_map }
-	}
-}
-
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub struct SignalElements(pub Vec<bool>);
+pub struct ElementString(pub Vec<bool>);
 
-impl SignalElements {
-	pub fn from_dot_str(element_str: &str) -> Self {
+impl ElementString {
+	pub fn to_dot_string(&self) -> String {
+		if self.0.is_empty() {
+			" / ".to_string()
+		} else {
+			self.0
+				.iter()
+				.map(|&element| if element { "-" } else { "." })
+				.collect::<String>()
+		}
+	}
+}
+
+impl From<String> for ElementString {
+	fn from(element_str: String) -> Self {
 		if element_str.is_empty() {
 			return Self::default();
 		}
@@ -107,21 +34,6 @@ impl SignalElements {
 		}
 
 		Self(elements)
-	}
-}
-
-impl fmt::Display for SignalElements {
-	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		let s = if self.0.is_empty() {
-			" / ".to_string()
-		} else {
-			self.0
-				.iter()
-				.map(|&element| if element { "-" } else { "." })
-				.collect::<String>()
-		};
-
-		write!(f, "{}", s)
 	}
 }
 
@@ -199,69 +111,145 @@ pub enum Symbol {
 	SOS,
 }
 
-#[rustfmt::skip]
-const SYMBOL_SPEC: [(char, &str, Group, Symbol); 60] = [
-	(' ',	"",			Group::Void,	Symbol::Space),
-	('A',	".-",		Group::Letter,	Symbol::A),
-	('B',	"-...",		Group::Letter,	Symbol::B),
-	('C',	"-.-.",		Group::Letter,	Symbol::C),
-	('D',	"-..",		Group::Letter,	Symbol::D),
-	('E',	".",		Group::Letter,	Symbol::E),
-	('F',	"..-.",		Group::Letter,	Symbol::F),
-	('G',	"--.",		Group::Letter,	Symbol::G),
-	('H',	"....",		Group::Letter,	Symbol::H),
-	('I',	"..",		Group::Letter,	Symbol::I),
-	('J',	".---",		Group::Letter,	Symbol::J),
-	('K',	"-.-",		Group::Letter,	Symbol::K),
-	('L',	".-..",		Group::Letter,	Symbol::L),
-	('M',	"--",		Group::Letter,	Symbol::M),
-	('N',	"-.",		Group::Letter,	Symbol::N),
-	('O',	"---",		Group::Letter,	Symbol::O),
-	('P',	".--.",		Group::Letter,	Symbol::P),
-	('Q',	"--.-",		Group::Letter,	Symbol::Q),
-	('R',	".-.",		Group::Letter,	Symbol::R),
-	('S',	"...",		Group::Letter,	Symbol::S),
-	('T',	"-",		Group::Letter,	Symbol::T),
-	('U',	"..-",		Group::Letter,	Symbol::U),
-	('V',	"...-",		Group::Letter,	Symbol::V),
-	('W',	".--",		Group::Letter,	Symbol::W),
-	('X',	"-..-",		Group::Letter,	Symbol::X),
-	('Y',	"-.--",		Group::Letter,	Symbol::Y),
-	('Z',	"--..",		Group::Letter,	Symbol::Z),
-	('0',	"-----",	Group::Number,	Symbol::_0),
-	('1',	".----",	Group::Number,	Symbol::_1),
-	('2',	"..---",	Group::Number,	Symbol::_2),
-	('3',	"...--",	Group::Number,	Symbol::_3),
-	('4',	"....-",	Group::Number,	Symbol::_4),
-	('5',	".....",	Group::Number,	Symbol::_5),
-	('6',	"-....",	Group::Number,	Symbol::_6),
-	('7',	"--...",	Group::Number,	Symbol::_7),
-	('8',	"---..",	Group::Number,	Symbol::_8),
-	('9',	"----.",	Group::Number,	Symbol::_9),
-	('.',	".-.-.-",	Group::Special,	Symbol::Period),
-	(',',	"--..--",	Group::Special,	Symbol::Comma),
-	('?',	"..--..",	Group::Special,	Symbol::Question),
-	('!',	"-.-.--",	Group::Special,	Symbol::Exclamation),
-	('/',	"-..-.",	Group::Special,	Symbol::Slash),
-	('(',	"-.--.",	Group::Special,	Symbol::ParenthesisOpen),
-	(')',	"-.--.-",	Group::Special,	Symbol::ParenthesisClose),
-	('&',	".-...",	Group::Special,	Symbol::Ampersand),
-	(':',	"---...",	Group::Special,	Symbol::Colon),
-	(';',	"-.-.-.",	Group::Special,	Symbol::Semicolon),
-	('=',	"-...-",	Group::Special,	Symbol::Equals),
-	('+',	".-.-.",	Group::Special,	Symbol::Plus),
-	('-',	"-....-",	Group::Special,	Symbol::Minus),
-	('$',	"...-..-",	Group::Special,	Symbol::Dollar),
-	('@',	".--.-.",	Group::Special,	Symbol::At),
-	('~',	".-.-.-.",	Group::Special,	Symbol::Invalid),		// for undefined rhythms
-	('*',	"........",	Group::Prosign,	Symbol::Correction),	// [HH]
-	('^',	".-...",	Group::Prosign,	Symbol::Wait),			// [AS]
-	('{',	"-.-.-",	Group::Prosign,	Symbol::Start),			// [CT] commencing transmission
-	('}',	".-.-.",	Group::Prosign,	Symbol::End),			// [AR] end of message
-	('%',	"...-.-",	Group::Prosign,	Symbol::EndOfContact),	// [VA] end of contact
-	('\n',	".-.-",		Group::Prosign,	Symbol::NewLine),		// [RT] 
-	('#',	"...---...",Group::Prosign,	Symbol::SOS),			// [SOS]
-];
+impl Symbol {
+	pub fn character(&self) -> char {
+		self.get_spec().character()
+	}
 
-#[cfg(test)]
-mod tests {}
+	pub fn elements(&self) -> ElementString {
+		self.get_spec().elements()
+	}
+
+	pub fn group(&self) -> Group {
+		self.get_spec().group()
+	}
+
+	fn get_spec(&self) -> &SymbolSpec {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.symbol() == *self)
+			.unwrap()
+	}
+
+	pub fn from_elements(elements: &ElementString) -> Self {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.elements() == *elements)
+			.map(|spec| spec.symbol().clone())
+			.unwrap_or(Self::Invalid)
+	}
+
+	pub fn from_char(char: char) -> Result<Self> {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.character() == char.to_ascii_uppercase())
+			.map(|spec| spec.symbol().clone())
+			.ok_or_else(|| anyhow!("invalid plaintext char: {:?}", char))
+	}
+}
+
+pub struct SymbolString(pub Vec<Symbol>);
+
+impl SymbolString {
+	pub fn as_string(&self) -> String {
+		self.0.iter().map(|symbol| symbol.character()).collect()
+	}
+}
+
+impl TryFrom<String> for SymbolString {
+	fn try_from(string: String) -> Result<Self> {
+		let symbols = string
+			.chars()
+			.map(Symbol::from_char)
+			.collect::<Result<Vec<Symbol>>>()?;
+
+		Ok(Self(symbols))
+	}
+
+	type Error = anyhow::Error;
+}
+
+struct SymbolSpec(char, ElementString, Group, Symbol);
+
+#[rustfmt::skip]
+impl SymbolSpec {
+	pub fn character(&self) -> char { self.0 }
+	pub fn elements(&self) -> ElementString { self.1.clone() }
+	pub fn group(&self) -> Group { self.2.clone() }
+	pub fn symbol(&self) -> Symbol { self.3.clone() }
+}
+
+/// Placeholder
+#[macro_export]
+macro_rules! cw {
+	($($tt:tt)*) => {
+		ElementString(vec![])
+	};
+	() => {
+		ElementString(vec![])
+	};
+}
+
+#[rustfmt::skip]
+static SYMBOL_SPEC: [SymbolSpec; 60] = [
+	SymbolSpec(' ',		cw!(),				Group::Void,		Symbol::Space),
+	SymbolSpec('A',		cw!(.-),			Group::Letter,		Symbol::A),
+	SymbolSpec('B',		cw!(-...),			Group::Letter,		Symbol::B),
+	SymbolSpec('C',		cw!(-.-.),			Group::Letter,		Symbol::C),
+	SymbolSpec('D',		cw!(-..),			Group::Letter,		Symbol::D),
+	SymbolSpec('E',		cw!(.),				Group::Letter,		Symbol::E),
+	SymbolSpec('F',		cw!(..-.),			Group::Letter,		Symbol::F),
+	SymbolSpec('G',		cw!(--.),			Group::Letter,		Symbol::G),
+	SymbolSpec('H',		cw!(....),			Group::Letter,		Symbol::H),
+	SymbolSpec('I',		cw!(..),			Group::Letter,		Symbol::I),
+	SymbolSpec('J',		cw!(.---),			Group::Letter,		Symbol::J),
+	SymbolSpec('K',		cw!(-.-),			Group::Letter,		Symbol::K),
+	SymbolSpec('L',		cw!(.-..),			Group::Letter,		Symbol::L),
+	SymbolSpec('M',		cw!(--),			Group::Letter,		Symbol::M),
+	SymbolSpec('N',		cw!(-.),			Group::Letter,		Symbol::N),
+	SymbolSpec('O',		cw!(---),			Group::Letter,		Symbol::O),
+	SymbolSpec('P',		cw!(.--.),			Group::Letter,		Symbol::P),
+	SymbolSpec('Q',		cw!(--.-),			Group::Letter,		Symbol::Q),
+	SymbolSpec('R',		cw!(.-.),			Group::Letter,		Symbol::R),
+	SymbolSpec('S',		cw!(...),			Group::Letter,		Symbol::S),
+	SymbolSpec('T',		cw!(-),				Group::Letter,		Symbol::T),
+	SymbolSpec('U',		cw!(..-),			Group::Letter,		Symbol::U),
+	SymbolSpec('V',		cw!(...-),			Group::Letter,		Symbol::V),
+	SymbolSpec('W',		cw!(.--),			Group::Letter,		Symbol::W),
+	SymbolSpec('X',		cw!(-..-),			Group::Letter,		Symbol::X),
+	SymbolSpec('Y',		cw!(-.--),			Group::Letter,		Symbol::Y),
+	SymbolSpec('Z',		cw!(--..),			Group::Letter,		Symbol::Z),
+	SymbolSpec('0',		cw!(-----),			Group::Number,		Symbol::_0),
+	SymbolSpec('1',		cw!(.----),			Group::Number,		Symbol::_1),
+	SymbolSpec('2',		cw!(..---),			Group::Number,		Symbol::_2),
+	SymbolSpec('3',		cw!(...--),			Group::Number,		Symbol::_3),
+	SymbolSpec('4',		cw!(....-),			Group::Number,		Symbol::_4),
+	SymbolSpec('5',		cw!(.....),			Group::Number,		Symbol::_5),
+	SymbolSpec('6',		cw!(-....),			Group::Number,		Symbol::_6),
+	SymbolSpec('7',		cw!(--...),			Group::Number,		Symbol::_7),
+	SymbolSpec('8',		cw!(---..),			Group::Number,		Symbol::_8),
+	SymbolSpec('9',		cw!(----.),			Group::Number,		Symbol::_9),
+	SymbolSpec('.',		cw!(.-.-.-),		Group::Special,		Symbol::Period),
+	SymbolSpec(',',		cw!(--..--),		Group::Special,		Symbol::Comma),
+	SymbolSpec('?',		cw!(..--..),		Group::Special,		Symbol::Question),
+	SymbolSpec('!',		cw!(-.-.--),		Group::Special,		Symbol::Exclamation),
+	SymbolSpec('/',		cw!(-..-.),			Group::Special,		Symbol::Slash),
+	SymbolSpec('(',		cw!(-.--.),			Group::Special,		Symbol::ParenthesisOpen),
+	SymbolSpec(')',		cw!(-.--.-),		Group::Special,		Symbol::ParenthesisClose),
+	SymbolSpec('&',		cw!(.-...),			Group::Special,		Symbol::Ampersand),
+	SymbolSpec(':',		cw!(---...),		Group::Special,		Symbol::Colon),
+	SymbolSpec(';',		cw!(-.-.-.),		Group::Special,		Symbol::Semicolon),
+	SymbolSpec('=',		cw!(-...-),			Group::Special,		Symbol::Equals),
+	SymbolSpec('+',		cw!(.-.-.),			Group::Special,		Symbol::Plus),
+	SymbolSpec('-',		cw!(-....-),		Group::Special,		Symbol::Minus),
+	SymbolSpec('$',		cw!(...-..-),		Group::Special,		Symbol::Dollar),
+	SymbolSpec('@',		cw!(.--.-.),		Group::Special,		Symbol::At),
+	SymbolSpec('~',		cw!(.-.-.-.),		Group::Special,		Symbol::Invalid),		// for undefined rhythms
+	SymbolSpec('*',		cw!(........),		Group::Prosign,		Symbol::Correction),	// [HH]
+	SymbolSpec('^',		cw!(.-...),			Group::Prosign,		Symbol::Wait),			// [AS]
+	SymbolSpec('{',		cw!(-.-.-),			Group::Prosign,		Symbol::Start),			// [CT] commencing transmission
+	SymbolSpec('}',		cw!(.-.-.),			Group::Prosign,		Symbol::End),			// [AR] end of message
+	SymbolSpec('%',		cw!(...-.-),		Group::Prosign,		Symbol::EndOfContact),	// [VA] end of contact
+	SymbolSpec('\n',	cw!(.-.-),			Group::Prosign,		Symbol::NewLine),		// [RT] 
+	SymbolSpec('#',		cw!(...---...),		Group::Prosign,		Symbol::SOS),			// [SOS]
+];

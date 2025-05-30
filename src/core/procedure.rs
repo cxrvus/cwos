@@ -1,7 +1,9 @@
-use super::{context::CwContext, symbol::Symbol};
+use crate::core::symbol::SymbolString;
+
+use super::context::CwContext;
 
 pub trait Procedure<T>: Default {
-	fn tick(&mut self, ctx: &mut CwContext<T>, buffer: Vec<Symbol>) -> Vec<Symbol>;
+	fn tick(&mut self, ctx: &mut CwContext<T>, buffer: SymbolString) -> SymbolString;
 }
 
 #[derive(Default)]
@@ -10,8 +12,8 @@ pub struct Greeting {
 }
 
 impl<T> Procedure<T> for Greeting {
-	fn tick(&mut self, ctx: &mut CwContext<T>, _: Vec<Symbol>) -> Vec<Symbol> {
-		ctx.symbol.from_str(&self.message).unwrap()
+	fn tick(&mut self, _: &mut CwContext<T>, _: SymbolString) -> SymbolString {
+		SymbolString::try_from(self.message.clone()).unwrap()
 	}
 }
 
@@ -19,7 +21,7 @@ impl<T> Procedure<T> for Greeting {
 pub struct Echo;
 
 impl<T> Procedure<T> for Echo {
-	fn tick(&mut self, _: &mut CwContext<T>, buffer: Vec<Symbol>) -> Vec<Symbol> {
+	fn tick(&mut self, _: &mut CwContext<T>, buffer: SymbolString) -> SymbolString {
 		buffer
 	}
 }

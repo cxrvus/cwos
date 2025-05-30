@@ -1,8 +1,10 @@
+use crate::core::symbol::SymbolString;
+
 use super::{
 	config::{Config, SignalConfig},
 	context::CwContext,
 	procedure::Procedure,
-	symbol::{SignalElements, Symbol, SymbolConverter},
+	symbol::{ElementString, Symbol},
 };
 
 #[derive(Default)]
@@ -79,15 +81,12 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 				// if the user is idle for long enough (but the buffer is not empty, meaning that signals have been transmitted)
 				// then pass the input buffer to the procedure and return control
 				if !self.buffer.is_empty() && self.elapsed_ms >= Self::MAX_MS {
-					let conv = &self.ctx.symbol.clone();
-
 					let input_signals = self.buffer.clone();
-					let input_symbols =
-						Self::signals_to_symbols(conv, &self.input_config, input_signals);
+					let input_symbols = Self::signals_to_symbols(&self.input_config, input_signals);
 
 					let output_symbols = self.procedure.tick(&mut self.ctx, input_symbols);
 					let output_signals =
-						Self::symbols_to_signals(conv, &self.output_config, output_symbols);
+						Self::symbols_to_signals(&self.output_config, output_symbols);
 
 					self.buffer = output_signals;
 
@@ -122,12 +121,8 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 		}
 	}
 
-	fn signals_to_symbols(
-		conv: &SymbolConverter,
-		config: &SignalElementConfig,
-		signals: Vec<Signal>,
-	) -> Vec<Symbol> {
-		let mut elements: SignalElements = SignalElements(vec![]);
+	fn signals_to_symbols(config: &SignalElementConfig, signals: Vec<Signal>) -> SymbolString {
+		let mut elements: ElementString = ElementString(vec![]);
 		let mut symbols: Vec<Symbol> = vec![];
 
 		for signal in signals {
@@ -137,7 +132,7 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 				elements.0.push(signal.duration >= config.dah_ms);
 			} else if signal.duration > config.break_ms {
 				// convert elements to a symbol if silence qualifies for a character break
-				symbols.push(conv.from_elements(&elements));
+				symbols.push(Symbol::from_elements(&elements));
 				elements.0.clear();
 
 				// add a space
@@ -147,17 +142,13 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 			}
 		}
 
-		symbols
+		SymbolString(symbols)
 	}
 
-	fn symbols_to_signals(
-		conv: &SymbolConverter,
-		config: &SignalElementConfig,
-		symbols: Vec<Symbol>,
-	) -> Vec<Signal> {
+	fn symbols_to_signals(config: &SignalElementConfig, symbols: SymbolString) -> Vec<Signal> {
 		let mut signals: Vec<Signal> = vec![];
 
-		for symbol in symbols {
+		for symbol in symbols.0 {
 			if let Symbol::Space = symbol {
 				// remove the last silent signal element
 				if let Some(last) = signals.last() {
@@ -172,8 +163,7 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 					duration: config.space_ms,
 				});
 			} else {
-				let elements = conv.to_elements(&symbol);
-				for signal in elements.0 {
+				for signal in symbol.elements().0 {
 					// push either a dit or a dah
 					signals.push(Signal {
 						is_on: true,
