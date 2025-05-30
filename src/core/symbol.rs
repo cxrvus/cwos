@@ -4,11 +4,11 @@ use anyhow::{anyhow, Result};
 use std::fmt::{self, Formatter};
 
 #[derive(Clone)]
-struct SymbolSpec {
+pub struct SymbolSpec {
 	symbol: Symbol,
 	group: Group,
 	char: char,
-	signals: Signals,
+	elements: SignalElements,
 }
 
 #[derive(Clone)]
@@ -17,8 +17,12 @@ pub struct SymbolConverter {
 }
 
 impl SymbolConverter {
-	pub fn from_signals(&self, signals: &Signals) -> Symbol {
-		if let Some(spec) = self.symbol_map.iter().find(|spec| spec.signals == *signals) {
+	pub fn from_elements(&self, elements: &SignalElements) -> Symbol {
+		if let Some(spec) = self
+			.symbol_map
+			.iter()
+			.find(|spec| spec.elements == *elements)
+		{
 			spec.symbol.clone()
 		} else {
 			Symbol::Invalid
@@ -42,24 +46,26 @@ impl SymbolConverter {
 	}
 
 	pub fn to_char(&self, symbol: &Symbol) -> char {
-		self.symbol_map
-			.iter()
-			.find(|spec| spec.symbol == *symbol)
-			.unwrap()
-			.char
+		self.get_spec(symbol).char
 	}
 
 	pub fn as_string(&self, symbols: Vec<Symbol>) -> String {
 		symbols.iter().map(|symbol| self.to_char(symbol)).collect()
 	}
 
-	pub fn to_signals(&self, symbol: &Symbol) -> Signals {
+	pub fn to_elements(&self, symbol: &Symbol) -> SignalElements {
+		self.get_spec(symbol).elements.clone()
+	}
+
+	pub fn get_group(&self, symbol: &Symbol) -> &Group {
+		&self.get_spec(symbol).group
+	}
+
+	pub fn get_spec(&self, symbol: &Symbol) -> &SymbolSpec {
 		self.symbol_map
 			.iter()
 			.find(|spec| spec.symbol == *symbol)
 			.unwrap()
-			.signals
-			.clone()
 	}
 }
 
@@ -67,11 +73,11 @@ impl Default for SymbolConverter {
 	fn default() -> Self {
 		let symbol_map = SYMBOL_SPEC
 			.into_iter()
-			.map(|(char, signal_str, group, symbol)| SymbolSpec {
+			.map(|(char, element_str, group, symbol)| SymbolSpec {
 				symbol,
 				group,
 				char,
-				signals: Signals::from_dot_str(signal_str),
+				elements: SignalElements::from_dot_str(element_str),
 			})
 			.collect();
 
@@ -80,38 +86,38 @@ impl Default for SymbolConverter {
 }
 
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub struct Signals(pub Vec<bool>);
+pub struct SignalElements(pub Vec<bool>);
 
-impl Signals {
-	pub fn from_dot_str(signal_str: &str) -> Self {
-		if signal_str.is_empty() {
+impl SignalElements {
+	pub fn from_dot_str(element_str: &str) -> Self {
+		if element_str.is_empty() {
 			return Self::default();
 		}
 
-		let mut signals = vec![];
+		let mut elements = vec![];
 
-		for signal_char in signal_str.chars() {
-			let signal = match signal_char {
+		for signal_char in element_str.chars() {
+			let element = match signal_char {
 				'.' => false,
 				'-' => true,
 				_ => panic!("char may only be '.' or '-'"),
 			};
 
-			signals.push(signal);
+			elements.push(element);
 		}
 
-		Self(signals)
+		Self(elements)
 	}
 }
 
-impl fmt::Display for Signals {
+impl fmt::Display for SignalElements {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		let s = if self.0.is_empty() {
 			" / ".to_string()
 		} else {
 			self.0
 				.iter()
-				.map(|&signal| if signal { "-" } else { "." })
+				.map(|&element| if element { "-" } else { "." })
 				.collect::<String>()
 		};
 
@@ -120,7 +126,7 @@ impl fmt::Display for Signals {
 }
 
 #[derive(Clone)]
-enum Group {
+pub enum Group {
 	Letter,
 	Number,
 	Special,
