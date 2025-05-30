@@ -1,6 +1,6 @@
 use super::{
+	config::{Config, SignalConfig},
 	context::CwContext,
-	database::{Config, SignalConfig},
 	routine::Routine,
 	symbol::{SignalElements, Symbol, SymbolConverter},
 };
