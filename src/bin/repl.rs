@@ -7,7 +7,7 @@ use std::io::stdin;
 use cwos::core::{
 	context::CwContext,
 	database::Database,
-	routine::{Echo, Routine},
+	procedure::{Echo, Procedure},
 };
 
 pub fn main() {

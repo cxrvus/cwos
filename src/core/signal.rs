@@ -1,7 +1,7 @@
 use super::{
 	config::{Config, SignalConfig},
 	context::CwContext,
-	routine::Routine,
+	procedure::Procedure,
 	symbol::{SignalElements, Symbol, SymbolConverter},
 };
 
@@ -21,26 +21,26 @@ struct Signal {
 }
 
 #[derive(Default)]
-pub struct SignalController<T: Default, R: Routine<T>> {
+pub struct SignalController<T: Default, P: Procedure<T>> {
 	user_config: SignalElementConfig,
 	comp_config: SignalElementConfig,
 	ctx: CwContext<T>,
-	routine: R,
+	procedure: P,
 	active_role: Role,
 	last_input_state: bool,
 	buffer: Vec<Signal>,
 	elapsed_ms: u32,
 }
 
-impl<T: Default, R: Routine<T>> SignalController<T, R> {
+impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 	pub const MAX_MS: u32 = 3000;
 
-	pub fn new(config: &Config, routine: R, ctx: CwContext<T>) -> Self {
+	pub fn new(config: &Config, procedure: P, ctx: CwContext<T>) -> Self {
 		Self {
 			user_config: SignalElementConfig::from(config.user_signal),
 			comp_config: SignalElementConfig::from(config.comp_signal),
 			ctx,
-			routine,
+			procedure,
 			..Default::default()
 		}
 	}
@@ -85,7 +85,7 @@ impl<T: Default, R: Routine<T>> SignalController<T, R> {
 					let input_symbols =
 						Self::signals_to_symbols(conv, &self.user_config, input_signals);
 
-					let output_symbols = self.routine.tick(&mut self.ctx, input_symbols);
+					let output_symbols = self.procedure.tick(&mut self.ctx, input_symbols);
 					let output_signals =
 						Self::symbols_to_signals(conv, &self.comp_config, output_symbols);
 
