@@ -7,12 +7,12 @@ const ON_COLOR: Color32 = Color32::from_gray(128);
 fn main() -> eframe::Result {
 	let options = eframe::NativeOptions {
 		viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
+		centered: true,
 		..Default::default()
 	};
 
 	let config = Config::default();
 	let mut controller = UiController::new(config.clone());
-
 
 	// Our application state:
 	eframe::run_simple_native("CWOS", options, move |ctx, _frame| {
