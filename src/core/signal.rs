@@ -1,13 +1,9 @@
-use crate::core::symbol::SymbolString;
-
 use super::{
 	config::{Config, SignalConfig},
-	context::CwContext,
-	procedure::Procedure,
-	symbol::{ElementString, Symbol},
+	symbol::{ElementString, Symbol, SymbolString},
 };
 
-#[derive(Default)]
+#[derive(Default, PartialEq)]
 pub enum Mode {
 	#[default]
 	Output,
@@ -23,47 +19,42 @@ struct Signal {
 }
 
 #[derive(Default)]
-pub struct SignalController<T: Default, P: Procedure<T>> {
+pub struct SignalController {
 	input_config: SignalElementConfig,
 	output_config: SignalElementConfig,
-	ctx: CwContext<T>,
-	procedure: P,
-	active_role: Mode,
+	mode: Mode,
 	buffer: Vec<Signal>,
 	elapsed_ms: u32,
 }
 
-impl<T: Default, P: Procedure<T>> SignalController<T, P> {
-	pub const MAX_MS: u32 = 3000;
+impl SignalController {
+	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
-	pub fn new(config: &Config, procedure: P, ctx: CwContext<T>) -> Self {
+	pub fn new(config: &Config) -> Self {
 		Self {
 			input_config: SignalElementConfig::from(config.input.signal),
 			output_config: SignalElementConfig::from(config.output.signal),
-			ctx,
-			procedure,
 			..Default::default()
 		}
 	}
 
-	pub fn tick(&mut self, input_state: bool, delta_ms: u32) -> OutputState {
+	fn tick(&mut self, delta_ms: u32, new_mode: Mode) {
 		self.elapsed_ms += delta_ms;
 
-		if let Mode::Output = self.active_role {
-			if input_state {
-				// if the user inputs the signal, put them back into control
-				self.buffer.clear();
-				self.active_role = Mode::Input;
-				self.input_tick(input_state)
-			} else {
-				self.output_tick()
-			}
-		} else {
-			self.input_tick(input_state)
+		if new_mode != self.mode {
+			self.reset();
+			self.mode = new_mode;
 		}
 	}
 
-	fn input_tick(&mut self, input_state: bool) -> OutputState {
+	pub fn reset(&mut self) {
+		self.buffer.clear();
+		self.elapsed_ms = 0;
+	}
+
+	pub fn input_tick(&mut self, delta_ms: u32, input_state: bool) -> Option<SymbolString> {
+		self.tick(delta_ms, Mode::Input);
+
 		let last_input_state = if let Some(signal) = self.buffer.last() {
 			signal.is_on
 		} else {
@@ -86,25 +77,27 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 				// then pass the input buffer to the procedure and return control
 				if !self.buffer.is_empty() && self.elapsed_ms >= Self::MAX_MS {
 					let input_signals = self.buffer.clone();
-					let input_symbols = Self::signals_to_symbols(&self.input_config, input_signals);
+					let input_symbols = self.signals_to_symbols(input_signals);
 
-					let output_symbols = self.procedure.tick(&mut self.ctx, input_symbols);
-					let output_signals =
-						Self::symbols_to_signals(&self.output_config, output_symbols);
+					self.reset();
 
-					self.buffer = output_signals;
-
-					self.active_role = Mode::Output;
-					self.elapsed_ms = 0;
+					return Some(input_symbols);
 				}
 			}
-			(true, true) => {}
+			(true, true) => {} // todo: [HH] if ms >= MAX
 		}
 
-		OutputState(input_state)
+		None
 	}
 
-	fn output_tick(&mut self) -> OutputState {
+	pub fn output_tick(&mut self, delta_ms: u32, buffer: Option<SymbolString>) -> Option<bool> {
+		self.tick(delta_ms, Mode::Output);
+
+		if let Some(symbols) = buffer {
+			let signals = self.symbols_to_signals(symbols);
+			self.buffer.extend(signals);
+		}
+
 		if let Some(signal) = self.buffer.first() {
 			let output_state = signal.is_on;
 
@@ -116,16 +109,18 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 				}
 			}
 
-			OutputState(output_state)
+			Some(output_state)
 		} else {
 			self.elapsed_ms = 0;
-			self.active_role = Mode::Input;
+			self.mode = Mode::Input;
 
-			OutputState(false)
+			None
 		}
 	}
 
-	fn signals_to_symbols(config: &SignalElementConfig, signals: Vec<Signal>) -> SymbolString {
+	fn signals_to_symbols(&self, signals: Vec<Signal>) -> SymbolString {
+		let config = &self.input_config;
+
 		let mut elements: ElementString = ElementString(vec![]);
 		let mut symbols: Vec<Symbol> = vec![];
 
@@ -149,7 +144,9 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 		SymbolString(symbols)
 	}
 
-	fn symbols_to_signals(config: &SignalElementConfig, symbols: SymbolString) -> Vec<Signal> {
+	fn symbols_to_signals(&self, symbols: SymbolString) -> Vec<Signal> {
+		let config = &self.output_config;
+
 		let mut signals: Vec<Signal> = vec![];
 
 		for symbol in symbols.0 {
