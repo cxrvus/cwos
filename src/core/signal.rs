@@ -3,7 +3,7 @@ use super::{
 	symbol::{ElementString, Symbol, SymbolString},
 };
 
-#[derive(Default, PartialEq)]
+#[derive(Default, PartialEq, Clone, Copy)]
 pub enum Mode {
 	#[default]
 	Output,
@@ -29,6 +29,10 @@ pub struct SignalController {
 
 impl SignalController {
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
+
+	pub fn get_mode(&self) -> Mode {
+		self.mode
+	}
 
 	pub fn new(config: &Config) -> Self {
 		Self {
