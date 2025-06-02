@@ -29,7 +29,6 @@ pub struct SignalController<T: Default, P: Procedure<T>> {
 	ctx: CwContext<T>,
 	procedure: P,
 	active_role: Mode,
-	last_input_state: bool,
 	buffer: Vec<Signal>,
 	elapsed_ms: u32,
 }
@@ -65,16 +64,21 @@ impl<T: Default, P: Procedure<T>> SignalController<T, P> {
 	}
 
 	fn input_tick(&mut self, input_state: bool) -> OutputState {
-		match (self.last_input_state, input_state) {
+		let last_input_state = if let Some(signal) = self.buffer.last() {
+			signal.is_on
+		} else {
+			false
+		};
+
+		match (last_input_state, input_state) {
 			(false, true) | (true, false) => {
 				// the if-clause prevents adding an Off-Signal duration to an empty duration buffer
-				if !self.buffer.is_empty() || self.last_input_state {
+				if !self.buffer.is_empty() || last_input_state {
 					self.buffer.push(Signal {
 						duration: self.elapsed_ms,
 						is_on: input_state,
 					});
 					self.elapsed_ms = 0;
-					self.last_input_state = input_state;
 				}
 			}
 			(false, false) => {
