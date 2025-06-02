@@ -233,12 +233,12 @@ static SYMBOL_SPEC: [SymbolSpec; 60] = [
 	SymbolSpec('-',		"-....-",	Group::Special,		Symbol::Minus),
 	SymbolSpec('$',		"...-..-",	Group::Special,		Symbol::Dollar),
 	SymbolSpec('@',		".--.-.",	Group::Special,		Symbol::At),
-	SymbolSpec('~',		".-.-.-.",	Group::Special,		Symbol::Invalid), // for undefined rhythms
-	SymbolSpec('*',		"........",	Group::Prosign,		Symbol::Correction), // [HH]
-	SymbolSpec('^',		".-...",	Group::Prosign,		Symbol::Wait), // [AS]
-	SymbolSpec('{',		"-.-.-",	Group::Prosign,		Symbol::Start), // [CT] commencing transmission
-	SymbolSpec('}',		".-.-.",	Group::Prosign,		Symbol::End), // [AR] end of message
-	SymbolSpec('%',		"...-.-",	Group::Prosign,		Symbol::EndOfContact), // [VA] end of contact
-	SymbolSpec('\n',	".-.-",		Group::Prosign,		Symbol::NewLine), // [RT]
-	SymbolSpec('#',		"...---...",	Group::Prosign,		Symbol::SOS), // [SOS]
+	SymbolSpec('~',		".-.-.-.",	Group::Prosign,		Symbol::Invalid), 		// [~] - for undefined CW sequences
+	SymbolSpec('*',		"........",	Group::Prosign,		Symbol::Correction), 	// [HH]
+	SymbolSpec('^',		".-...",	Group::Prosign,		Symbol::Wait), 			// [AS]
+	SymbolSpec('{',		"-.-.-",	Group::Prosign,		Symbol::Start), 		// [CT] commencing transmission
+	SymbolSpec('}',		".-.-.",	Group::Prosign,		Symbol::End), 			// [AR] end of message
+	SymbolSpec('#',		"...-.-",	Group::Prosign,		Symbol::EndOfContact), 	// [VA] end of contact
+	SymbolSpec('\n',	".-.-",		Group::Prosign,		Symbol::NewLine), 		// [RT]
+	SymbolSpec('%',		"...---...",	Group::Prosign,	Symbol::SOS), 			// [SOS]
 ];
