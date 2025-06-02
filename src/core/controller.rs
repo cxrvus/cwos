@@ -12,3 +12,12 @@ impl<T> CwController<T> for Echo {
 		buffer
 	}
 }
+
+#[derive(Default)]
+pub struct TestController;
+
+impl<T> CwController<T> for TestController {
+	fn tick(&mut self, _: &mut CwContext<T>, _: SymbolString) -> SymbolString {
+		SymbolString::try_from("TEST".to_string()).unwrap()
+	}
+}
