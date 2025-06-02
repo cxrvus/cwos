@@ -148,6 +148,7 @@ impl Symbol {
 	}
 }
 
+#[derive(Default)]
 pub struct SymbolString(pub Vec<Symbol>);
 
 impl SymbolString {
@@ -159,6 +160,7 @@ impl SymbolString {
 impl TryFrom<String> for SymbolString {
 	fn try_from(string: String) -> Result<Self> {
 		let symbols = string
+			.to_ascii_uppercase()
 			.chars()
 			.map(Symbol::from_char)
 			.collect::<Result<Vec<Symbol>>>()?;

@@ -3,7 +3,7 @@ use super::{
 	symbol::{ElementString, Symbol, SymbolString},
 };
 
-#[derive(Default, PartialEq)]
+#[derive(Default, PartialEq, Clone)]
 pub enum Mode {
 	#[default]
 	Output,
@@ -36,6 +36,10 @@ impl SignalController {
 			output_config: SignalElementConfig::from(config.output.signal),
 			..Default::default()
 		}
+	}
+
+	pub fn get_mode(&self) -> Mode {
+		self.mode.clone()
 	}
 
 	fn tick(&mut self, delta_ms: u32, new_mode: Mode) {
@@ -80,6 +84,7 @@ impl SignalController {
 					let input_symbols = self.signals_to_symbols(input_signals);
 
 					self.reset();
+					self.mode = Mode::Output;
 
 					return Some(input_symbols);
 				}
@@ -111,9 +116,7 @@ impl SignalController {
 
 			Some(output_state)
 		} else {
-			self.elapsed_ms = 0;
-			self.mode = Mode::Input;
-
+			self.reset();
 			None
 		}
 	}
