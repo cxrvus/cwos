@@ -15,7 +15,7 @@ pub fn wpm_to_ms(wpm: u32) -> u32 {
 	wpm!(wpm)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
 	pub input: InputConfig,
 	pub output: OutputConfig,
