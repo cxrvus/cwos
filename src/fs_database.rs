@@ -7,11 +7,11 @@ use crate::core::database::Database;
 
 const DB_FILE: &str = "cwos_db.json";
 
-struct FsDatabase(Database);
+pub struct FsDatabase(Database);
 
 impl FsDatabase {
 	fn path() -> PathBuf {
-		let mut path = dirs::home_dir().unwrap();
+		let mut path = dirs::home_dir().expect("could not get HOME directory");
 		path.push(DB_FILE);
 		path
 	}
