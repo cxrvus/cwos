@@ -59,11 +59,11 @@ impl SignalController {
 	pub fn input_tick(&mut self, delta_ms: u32, input_state: bool) -> Option<SymbolString> {
 		self.tick(delta_ms, Mode::Input);
 
-		let last_input_state = if let Some(signal) = self.buffer.last() {
-			signal.is_on
-		} else {
-			false
-		};
+		let last_input_state = self
+			.buffer
+			.last()
+			.map(|last_signal| last_signal.is_on)
+			.unwrap_or_default();
 
 		match (last_input_state, input_state) {
 			(false, true) | (true, false) => {
@@ -89,7 +89,7 @@ impl SignalController {
 					return Some(input_symbols);
 				}
 			}
-			(true, true) => {} // todo: [HH] if ms >= MAX
+			(true, true) => {}
 		}
 
 		None
