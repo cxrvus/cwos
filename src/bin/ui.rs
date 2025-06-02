@@ -1,5 +1,6 @@
 use cwos::core::{config::Config, signal::Mode};
 use eframe::egui::{self, Color32};
+use rodio::{source::SineWave, OutputStream, Sink, Source};
 
 const OFF_COLOR: Color32 = Color32::from_gray(64);
 const ON_COLOR: Color32 = Color32::from_gray(128);
@@ -14,7 +15,9 @@ fn main() -> eframe::Result {
 	let config = Config::default();
 	let mut controller = UiController::new(config.clone());
 
-	// Our application state:
+	let (_, stream_handle) = OutputStream::try_default().unwrap();
+	let mut sink: Option<Sink> = None;
+
 	eframe::run_simple_native("CWOS", options, move |ctx, _frame| {
 		egui::CentralPanel::default().show(ctx, |ui| {
 			ctx.request_repaint();
@@ -27,6 +30,20 @@ fn main() -> eframe::Result {
 			let color = if signal_is_on { ON_COLOR } else { OFF_COLOR };
 			let center = ui.min_rect().center();
 			ui.painter().circle_filled(center, 100.0, color);
+
+			match (signal_is_on, sink.is_some()) {
+				(true, false) => {
+					let new_sink = Sink::try_new(&stream_handle).unwrap();
+					let source = SineWave::new(440.).amplify(0.1).repeat_infinite();
+					new_sink.append(source);
+					new_sink.play();
+					sink = Some(new_sink);
+				}
+				(false, true) => {
+					sink.take();
+				}
+				_ => {}
+			}
 		});
 	})
 }
