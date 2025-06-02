@@ -6,8 +6,8 @@ use std::io::stdin;
 
 use cwos::core::{
 	context::CwContext,
+	controller::{CwController, Echo},
 	database::Database,
-	procedure::{Echo, Procedure},
 	symbol::SymbolString,
 };
 

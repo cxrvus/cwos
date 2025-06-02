@@ -1,4 +1,4 @@
-use crate::core::config::Config;
+use super::config::Config;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
