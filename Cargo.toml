@@ -9,6 +9,7 @@ edition = "2021"
 # STD Only:
 dirs = "*"
 termion = "*"
+eframe = "*"
 
 # STD Variations:
 anyhow = "*"
