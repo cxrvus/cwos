@@ -1,4 +1,4 @@
-use cwos::{apps::context::AppContext, prelude::*};
+use cwos::prelude::*;
 use eframe::{
 	egui::{self, Color32, IconData, Key, Ui, ViewportBuilder},
 	NativeOptions,
@@ -50,7 +50,6 @@ struct UiContext {
 	config: Config,
 	signal_controller: SignalController,
 	cw_controller: Echo,
-	cw_ctx: AppContext,
 	time_ms: u32,
 }
 
@@ -70,7 +69,6 @@ impl UiContext {
 			config,
 			audio,
 			cw_controller: Echo,
-			cw_ctx: AppContext::default(),
 			time_ms: 0,
 		}
 	}
@@ -97,7 +95,7 @@ impl eframe::App for UiContext {
 
 			let mut callback = |input: SymbolString| {
 				dbg!(&input.as_string());
-				let output = self.cw_controller.tick(&mut self.cw_ctx, input);
+				let output = self.cw_controller.tick(input);
 				dbg!(&output.as_string());
 				output
 			};

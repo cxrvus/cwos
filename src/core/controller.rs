@@ -1,14 +1,14 @@
 use super::symbol::SymbolString;
 
-pub trait CwController<T>: Default {
-	fn tick(&mut self, ctx: &mut T, input: SymbolString) -> SymbolString;
+pub trait CwController: Default {
+	fn tick(&mut self, input: SymbolString) -> SymbolString;
 }
 
 #[derive(Default)]
 pub struct Echo;
 
-impl<T> CwController<T> for Echo {
-	fn tick(&mut self, _: &mut T, input: SymbolString) -> SymbolString {
+impl CwController for Echo {
+	fn tick(&mut self, input: SymbolString) -> SymbolString {
 		input.normalized()
 	}
 }
@@ -18,8 +18,8 @@ pub struct TestController {
 	is_done: bool,
 }
 
-impl<T> CwController<T> for TestController {
-	fn tick(&mut self, _: &mut T, _: SymbolString) -> SymbolString {
+impl CwController for TestController {
+	fn tick(&mut self, _: SymbolString) -> SymbolString {
 		if !self.is_done {
 			SymbolString::try_from("TEST".to_string()).unwrap()
 		} else {

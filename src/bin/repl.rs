@@ -4,10 +4,9 @@
 
 use std::io::stdin;
 
-use cwos::{apps::context::AppContext, prelude::*};
+use cwos::prelude::*;
 
 pub fn main() {
-	let mut ctx = AppContext::default();
 	let mut controller = Echo;
 
 	loop {
@@ -17,7 +16,7 @@ pub fn main() {
 
 		match SymbolString::try_from(input_str.to_string()) {
 			Ok(input) => {
-				let output = controller.tick(&mut ctx, input).as_string();
+				let output = controller.tick(input).as_string();
 				println!(">> {output}");
 			}
 			Err(error) => {
