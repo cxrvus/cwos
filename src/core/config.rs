@@ -28,14 +28,14 @@ impl Default for Config {
 				signal: SignalConfig {
 					unit_ms: wpm!(20),
 					fw_ms: wpm!(10),
-					freq: 600,
+					freq: 650,
 				},
 			},
 			input: InputConfig {
 				signal: SignalConfig {
 					unit_ms: wpm!(15),
 					fw_ms: wpm!(10),
-					freq: 500,
+					freq: 550,
 				},
 			},
 		}
