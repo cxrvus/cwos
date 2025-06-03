@@ -1,4 +1,4 @@
-use cwos::prelude::*;
+use cwos::{apps::launcher::AppLauncher, prelude::*};
 use eframe::{
 	egui::{self, Color32, IconData, Key, Ui, ViewportBuilder},
 	NativeOptions,
@@ -49,7 +49,7 @@ struct UiContext {
 	audio: AudioContext,
 	config: Config,
 	signal_controller: SignalController,
-	cw_controller: Echo,
+	cw_controller: AppLauncher,
 	time_ms: u32,
 }
 
@@ -68,7 +68,7 @@ impl UiContext {
 			signal_controller: SignalController::new(&config.clone()),
 			config,
 			audio,
-			cw_controller: Echo,
+			cw_controller: AppLauncher::default(),
 			time_ms: 0,
 		}
 	}

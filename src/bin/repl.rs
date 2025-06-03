@@ -4,10 +4,10 @@
 
 use std::io::stdin;
 
-use cwos::prelude::*;
+use cwos::{apps::launcher::AppLauncher, prelude::*};
 
 pub fn main() {
-	let mut controller = Echo;
+	let mut controller = AppLauncher::default();
 
 	loop {
 		let mut input_str = String::new();
