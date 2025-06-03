@@ -16,9 +16,8 @@ path = "src/bin/ui.rs"
 
 # STD Only:
 dirs = "*"
-termion = "*"
 eframe = "*"
-rodio = "*"
+rodio = { version = "*", features = []}
 
 # STD Variations:
 anyhow = "*"
