@@ -1,5 +1,5 @@
 use super::context::AppContext;
-use crate::core::{controller::CwController, symbol::SymbolString};
+use crate::prelude::*;
 
 #[derive(Default)]
 pub struct AppLauncher;

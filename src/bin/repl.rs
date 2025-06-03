@@ -4,13 +4,7 @@
 
 use std::io::stdin;
 
-use cwos::{
-	apps::context::AppContext,
-	core::{
-		controller::{CwController, Echo},
-		symbol::SymbolString,
-	},
-};
+use cwos::{apps::context::AppContext, prelude::*};
 
 pub fn main() {
 	let mut ctx = AppContext::default();
