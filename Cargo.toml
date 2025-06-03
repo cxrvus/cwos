@@ -8,8 +8,8 @@ name = "repl"
 path = "src/bin/repl.rs"
 
 [[bin]]
-name = "ui"
-path = "src/bin/ui.rs"
+name = "native"
+path = "src/bin/native.rs"
 
 [dependencies]
 # todo: set actual version numbers

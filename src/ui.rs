@@ -1,41 +1,25 @@
-use cwos::{apps::launcher::AppLauncher, prelude::*};
-use eframe::{
-	egui::{self, Color32, IconData, Key, Ui, ViewportBuilder},
-	NativeOptions,
-};
+use crate::{apps::launcher::AppLauncher, prelude::*};
+use eframe::egui::{self, Color32, IconData, Key, Ui};
 use image::load_from_memory;
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
 use std::sync::Arc;
 
-fn load_icon() -> Option<IconData> {
-	let bytes = include_bytes!("assets/icon.png");
+pub fn load_icon() -> Option<Arc<IconData>> {
+	let bytes = include_bytes!("../assets/icon.png");
 	let image = load_from_memory(bytes).ok()?.into_rgba8();
 	let (width, height) = image.dimensions();
 	let rgba = image.into_raw();
-	Some(IconData {
+	let icon = Some(IconData {
 		rgba,
 		width,
 		height,
-	})
+	});
+
+	icon.map(Arc::new)
 }
 
-fn main() -> eframe::Result<()> {
-	let icon = load_icon().map(Arc::new);
-	let mut viewport = ViewportBuilder::default().with_inner_size([320.0, 240.0]);
-
-	if let Some(icon) = icon {
-		viewport = viewport.with_icon(icon)
-	}
-
-	let options = NativeOptions {
-		viewport,
-		centered: true,
-		..Default::default()
-	};
-
-	let app = UiContext::new(Config::default());
-
-	eframe::run_native("CWOS", options, Box::new(|_cc| Ok(Box::new(app))))
+pub fn create_app() -> UiContext {
+	UiContext::new(Config::default())
 }
 
 struct AudioContext {
@@ -45,7 +29,7 @@ struct AudioContext {
 	sink: Option<Sink>,
 }
 
-struct UiContext {
+pub struct UiContext {
 	audio: AudioContext,
 	config: Config,
 	signal_controller: SignalController,
