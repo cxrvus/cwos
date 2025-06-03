@@ -3,23 +3,28 @@ use std::{
 	path::PathBuf,
 };
 
-use crate::core::database::Database;
+use serde::{de::DeserializeOwned, Serialize};
 
 const DB_FILE: &str = "cwos_db.json";
 
-pub struct FsDatabase(Database);
+pub struct FsDatabase<T>(T)
+where
+	T: Default + Serialize + DeserializeOwned;
 
-impl FsDatabase {
+impl<T> FsDatabase<T>
+where
+	T: Default + Serialize + DeserializeOwned,
+{
 	fn path() -> PathBuf {
 		let mut path = dirs::home_dir().expect("could not get HOME directory");
 		path.push(DB_FILE);
 		path
 	}
 
-	pub fn load() -> Database {
+	pub fn load() -> T {
 		let path = Self::path();
 		if !path.exists() {
-			Database::default()
+			T::default()
 		} else {
 			let string = read_to_string(path).expect("failed to read db file");
 			serde_json::from_str(&string).expect("invalid db file")

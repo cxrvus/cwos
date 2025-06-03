@@ -4,15 +4,16 @@
 
 use std::io::stdin;
 
-use cwos::core::{
-	context::CwContext,
-	controller::{CwController, Echo},
-	database::Database,
-	symbol::SymbolString,
+use cwos::{
+	apps::context::AppContext,
+	core::{
+		controller::{CwController, Echo},
+		symbol::SymbolString,
+	},
 };
 
 pub fn main() {
-	let mut ctx = CwContext::new(Database::default());
+	let mut ctx = AppContext::default();
 	let mut controller = Echo;
 
 	loop {

@@ -1,10 +1,11 @@
-use cwos::core::{
-	config::Config,
-	context::CwContext,
-	controller::{CwController, Echo},
-	database::Database,
-	signal::{Mode, SignalController},
-	symbol::SymbolString,
+use cwos::{
+	apps::context::AppContext,
+	core::{
+		config::Config,
+		controller::{CwController, Echo},
+		signal::{Mode, SignalController},
+		symbol::SymbolString,
+	},
 };
 use eframe::{
 	egui::{self, Color32, IconData, Key, Ui, ViewportBuilder},
@@ -40,32 +41,32 @@ fn main() -> eframe::Result<()> {
 		..Default::default()
 	};
 
-	let app = CwosApp::new(Config::default());
+	let app = UiContext::new(Config::default());
 
 	eframe::run_native("CWOS", options, Box::new(|_cc| Ok(Box::new(app))))
 }
 
-struct AudioController {
+struct AudioContext {
 	last_beep: Beep,
 	_stream: OutputStream, // must be kept alive
 	stream_handle: OutputStreamHandle,
 	sink: Option<Sink>,
 }
 
-struct CwosApp {
-	audio: AudioController,
+struct UiContext {
+	audio: AudioContext,
 	config: Config,
 	signal_controller: SignalController,
 	cw_controller: Echo,
-	cw_ctx: CwContext<Database>,
+	cw_ctx: AppContext,
 	time_ms: u32,
 }
 
-impl CwosApp {
+impl UiContext {
 	fn new(config: Config) -> Self {
 		let (stream, stream_handle) = OutputStream::try_default().expect("Audio init failed");
 
-		let audio = AudioController {
+		let audio = AudioContext {
 			_stream: stream,
 			stream_handle,
 			sink: None,
@@ -77,7 +78,7 @@ impl CwosApp {
 			config,
 			audio,
 			cw_controller: Echo,
-			cw_ctx: CwContext::<Database>::default(),
+			cw_ctx: AppContext::default(),
 			time_ms: 0,
 		}
 	}
@@ -87,7 +88,7 @@ const OFF_COLOR: Color32 = Color32::from_gray(64);
 const INPUT_COLOR: Color32 = Color32::from_gray(192);
 const OUTPUT_COLOR: Color32 = Color32::from_gray(128);
 
-impl eframe::App for CwosApp {
+impl eframe::App for UiContext {
 	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 		egui::CentralPanel::default().show(ctx, |ui| {
 			ctx.request_repaint();
