@@ -232,9 +232,9 @@ static SYMBOL_SPEC: [SymbolSpec; 58] = [
 	SymbolSpec('?',		"..--..",	Group::Special,		Symbol::Question),
 	SymbolSpec('!',		"-.-.--",	Group::Special,		Symbol::Exclamation),
 	SymbolSpec('/',		"-..-.",	Group::Special,		Symbol::Slash),
-	SymbolSpec('(',		"-.--.",	Group::Special,		Symbol::ParenthesisOpen),
+	SymbolSpec('(',		"-.--.",	Group::Special,		Symbol::ParenthesisOpen),	// [KN] go ahead
 	SymbolSpec(')',		"-.--.-",	Group::Special,		Symbol::ParenthesisClose),
-	SymbolSpec('&',		".-...",	Group::Special,		Symbol::Ampersand),		// [AS] Wait
+	SymbolSpec('&',		".-...",	Group::Special,		Symbol::Ampersand),		// [AS] wait
 	SymbolSpec(':',		"---...",	Group::Special,		Symbol::Colon),
 	SymbolSpec(';',		"-.-.-.",	Group::Special,		Symbol::Semicolon),
 	SymbolSpec('=',		"-...-",	Group::Special,		Symbol::Equals),
