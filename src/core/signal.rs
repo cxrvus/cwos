@@ -3,7 +3,7 @@ use super::{
 	symbol::{ElementString, Symbol, SymbolString},
 };
 
-#[derive(Default, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub enum Mode {
 	#[default]
 	Input,
@@ -12,7 +12,7 @@ pub enum Mode {
 
 pub struct OutputState(pub bool);
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Signal {
 	is_on: bool,
 	duration: u32,
@@ -24,6 +24,7 @@ pub struct SignalController {
 	output_config: SignalElementConfig,
 	mode: Mode,
 	buffer: Vec<Signal>,
+	last_input_state: bool,
 	elapsed_ms: u32,
 }
 
@@ -46,6 +47,7 @@ impl SignalController {
 
 	pub fn reset(&mut self) {
 		self.buffer.clear();
+		self.last_input_state = false;
 		self.elapsed_ms = 0;
 	}
 
@@ -59,27 +61,28 @@ impl SignalController {
 	}
 
 	fn input_tick(&mut self, input_state: bool, callback: TickCallback) -> bool {
-		let last_input_state = self
-			.buffer
-			.last()
-			.map(|last_signal| last_signal.is_on)
-			.unwrap_or_default();
+		let last_input_state = self.last_input_state;
 
 		match (last_input_state, input_state) {
 			(false, true) | (true, false) => {
 				// the if-clause prevents adding an Off-Signal duration to an empty duration buffer
-				if !self.buffer.is_empty() || last_input_state {
-					self.buffer.push(Signal {
-						duration: self.elapsed_ms,
-						is_on: input_state,
-					});
-					self.elapsed_ms = 0;
-				}
+				self.buffer.push(Signal {
+					duration: self.elapsed_ms,
+					is_on: last_input_state,
+				});
+
+				self.elapsed_ms = 0;
+				dbg!(&self.buffer);
 			}
 			(false, false) => {
 				// if the user is idle for long enough
 				// then pass the input buffer to the procedure and return control
 				if self.elapsed_ms >= Self::MAX_MS {
+					self.buffer.push(Signal {
+						duration: self.elapsed_ms,
+						is_on: false,
+					});
+
 					let input_signals = self.buffer.clone();
 					let input_symbols = self.signals_to_symbols(input_signals);
 
@@ -94,6 +97,7 @@ impl SignalController {
 			(true, true) => {}
 		}
 
+		self.last_input_state = input_state;
 		input_state
 	}
 
@@ -133,7 +137,8 @@ impl SignalController {
 				// todo: send Error Correction symbol if ms >= max
 				// add a dah (true) or a dit (false)
 				elements.0.push(signal.duration >= config.dah_ms);
-			} else if signal.duration > config.break_ms {
+			} else if signal.duration >= config.break_ms {
+				dbg!(elements.clone());
 				// convert elements to a symbol if silence qualifies for a character break
 				symbols.push(Symbol::from_elements(&elements));
 				elements.0.clear();
