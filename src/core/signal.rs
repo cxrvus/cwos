@@ -27,6 +27,8 @@ pub struct SignalController {
 	elapsed_ms: u32,
 }
 
+type TickCallback<'a> = &'a mut dyn FnMut(SymbolString) -> SymbolString;
+
 impl SignalController {
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
@@ -42,23 +44,21 @@ impl SignalController {
 		}
 	}
 
-	fn tick(&mut self, delta_ms: u32, new_mode: Mode) {
-		self.elapsed_ms += delta_ms;
-
-		if new_mode != self.mode {
-			self.reset();
-			self.mode = new_mode;
-		}
-	}
-
 	pub fn reset(&mut self) {
 		self.buffer.clear();
 		self.elapsed_ms = 0;
 	}
 
-	pub fn input_tick(&mut self, delta_ms: u32, input_state: bool) -> Option<SymbolString> {
-		self.tick(delta_ms, Mode::Input);
+	pub fn tick(&mut self, delta_ms: u32, input_state: bool, callback: TickCallback) -> bool {
+		self.elapsed_ms += delta_ms;
 
+		match self.mode {
+			Mode::Input => self.input_tick(input_state, callback),
+			Mode::Output => self.output_tick(input_state, callback),
+		}
+	}
+
+	fn input_tick(&mut self, input_state: bool, callback: TickCallback) -> bool {
 		let last_input_state = self
 			.buffer
 			.last()
@@ -77,30 +77,31 @@ impl SignalController {
 				}
 			}
 			(false, false) => {
-				// if the user is idle for long enough (but the buffer is not empty, meaning that signals have been transmitted)
+				// if the user is idle for long enough
 				// then pass the input buffer to the procedure and return control
-				if !self.buffer.is_empty() && self.elapsed_ms >= Self::MAX_MS {
+				if self.elapsed_ms >= Self::MAX_MS {
 					let input_signals = self.buffer.clone();
 					let input_symbols = self.signals_to_symbols(input_signals);
 
 					self.reset();
 					self.mode = Mode::Output;
 
-					return Some(input_symbols);
+					let output_symbols = callback(input_symbols);
+					let output_signals = self.symbols_to_signals(output_symbols);
+					self.buffer = output_signals;
 				}
 			}
 			(true, true) => {}
 		}
 
-		None
+		input_state
 	}
 
-	pub fn output_tick(&mut self, delta_ms: u32, buffer: Option<SymbolString>) -> Option<bool> {
-		self.tick(delta_ms, Mode::Output);
-
-		if let Some(symbols) = buffer {
-			let signals = self.symbols_to_signals(symbols);
-			self.buffer.extend(signals);
+	fn output_tick(&mut self, input_state: bool, callback: TickCallback) -> bool {
+		if input_state {
+			self.mode = Mode::Input;
+			self.reset();
+			return self.input_tick(input_state, callback);
 		}
 
 		if let Some(signal) = self.buffer.first() {
@@ -114,10 +115,10 @@ impl SignalController {
 				}
 			}
 
-			Some(output_state)
+			output_state
 		} else {
 			self.reset();
-			None
+			false
 		}
 	}
 
