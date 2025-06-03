@@ -6,8 +6,8 @@ use super::{
 #[derive(Default, PartialEq, Clone)]
 pub enum Mode {
 	#[default]
-	Output,
 	Input,
+	Output,
 }
 
 pub struct OutputState(pub bool);
