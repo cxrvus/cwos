@@ -16,7 +16,10 @@ path = "src/bin/ui.rs"
 
 # STD Only:
 dirs = "*"
+
+## UI
 eframe = "*"
+image = "*"
 rodio = { version = "*", features = []}
 
 # STD Variations:

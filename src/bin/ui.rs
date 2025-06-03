@@ -6,12 +6,36 @@ use cwos::core::{
 	signal::{Mode, SignalController},
 	symbol::SymbolString,
 };
-use eframe::egui::{self, Color32, Key, Ui};
+use eframe::{
+	egui::{self, Color32, IconData, Key, Ui, ViewportBuilder},
+	NativeOptions,
+};
+use image::load_from_memory;
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
+use std::sync::Arc;
+
+fn load_icon() -> Option<IconData> {
+	let bytes = include_bytes!("assets/icon.png");
+	let image = load_from_memory(bytes).ok()?.into_rgba8();
+	let (width, height) = image.dimensions();
+	let rgba = image.into_raw();
+	Some(IconData {
+		rgba,
+		width,
+		height,
+	})
+}
 
 fn main() -> eframe::Result<()> {
-	let options = eframe::NativeOptions {
-		viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
+	let icon = load_icon().map(Arc::new);
+	let mut viewport = ViewportBuilder::default().with_inner_size([320.0, 240.0]);
+
+	if let Some(icon) = icon {
+		viewport = viewport.with_icon(icon)
+	}
+
+	let options = NativeOptions {
+		viewport,
 		centered: true,
 		..Default::default()
 	};
