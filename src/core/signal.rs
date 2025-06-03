@@ -65,7 +65,6 @@ impl SignalController {
 
 		match (last_input_state, input_state) {
 			(false, true) | (true, false) => {
-				// the if-clause prevents adding an Off-Signal duration to an empty duration buffer
 				self.buffer.push(Signal {
 					duration: self.elapsed_ms,
 					is_on: last_input_state,
@@ -122,6 +121,7 @@ impl SignalController {
 			output_state
 		} else {
 			self.reset();
+			self.mode = Mode::Input;
 			false
 		}
 	}
