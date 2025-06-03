@@ -189,7 +189,7 @@ impl SymbolSpec {
 }
 
 #[rustfmt::skip]
-static SYMBOL_SPEC: [SymbolSpec; 60] = [
+static SYMBOL_SPEC: [SymbolSpec; 58] = [
 	SymbolSpec(' ',		"",			Group::Void,		Symbol::Space),
 	SymbolSpec('A',		".-",		Group::Letter,		Symbol::A),
 	SymbolSpec('B',		"-...",		Group::Letter,		Symbol::B),
@@ -234,20 +234,18 @@ static SYMBOL_SPEC: [SymbolSpec; 60] = [
 	SymbolSpec('/',		"-..-.",	Group::Special,		Symbol::Slash),
 	SymbolSpec('(',		"-.--.",	Group::Special,		Symbol::ParenthesisOpen),
 	SymbolSpec(')',		"-.--.-",	Group::Special,		Symbol::ParenthesisClose),
-	SymbolSpec('&',		".-...",	Group::Special,		Symbol::Ampersand),
+	SymbolSpec('&',		".-...",	Group::Special,		Symbol::Ampersand),		// [AS] Wait
 	SymbolSpec(':',		"---...",	Group::Special,		Symbol::Colon),
 	SymbolSpec(';',		"-.-.-.",	Group::Special,		Symbol::Semicolon),
 	SymbolSpec('=',		"-...-",	Group::Special,		Symbol::Equals),
 	SymbolSpec('+',		".-.-.",	Group::Special,		Symbol::Plus),
 	SymbolSpec('-',		"-....-",	Group::Special,		Symbol::Minus),
-	SymbolSpec('$',		"...-..-",	Group::Special,		Symbol::Dollar),
 	SymbolSpec('@',		".--.-.",	Group::Special,		Symbol::At),
+	SymbolSpec('$',		"...-..-",	Group::Special,		Symbol::Dollar),
 	SymbolSpec('~',		".-.-.-.",	Group::Prosign,		Symbol::Invalid), 		// [~] - for undefined CW sequences
-	SymbolSpec('*',		"........",	Group::Prosign,		Symbol::Correction), 	// [HH]
-	SymbolSpec('^',		".-...",	Group::Prosign,		Symbol::Wait), 			// [AS]
-	SymbolSpec('{',		"-.-.-",	Group::Prosign,		Symbol::Start), 		// [CT] commencing transmission
-	SymbolSpec('}',		".-.-.",	Group::Prosign,		Symbol::End), 			// [AR] end of message
-	SymbolSpec('#',		"...-.-",	Group::Prosign,		Symbol::EndOfContact), 	// [VA] end of contact
-	SymbolSpec('\n',	".-.-",		Group::Prosign,		Symbol::NewLine), 		// [RT]
+	SymbolSpec('*',		"........",	Group::Prosign,		Symbol::Correction), 	// [HH] error / correction
+	SymbolSpec('^',		"-.-.-",	Group::Prosign,		Symbol::Start), 		// [CT] commencing transmission
+	SymbolSpec('#',		"...-.-",	Group::Prosign,		Symbol::End), 			// [VA] end of contact
+	SymbolSpec('\n',	".-.-",		Group::Prosign,		Symbol::NewLine), 		// [RT] carriage return
 	SymbolSpec('%',		"...---...",	Group::Prosign,	Symbol::SOS), 			// [SOS]
 ];
