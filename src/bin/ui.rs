@@ -91,7 +91,9 @@ impl eframe::App for UiContext {
 			let delta_ms = time_ms - self.time_ms;
 			self.time_ms = time_ms;
 
-			let input_state = ctx.input(|i| i.key_down(Key::Space));
+			let mouse_input = ctx.input(|i| i.pointer.primary_down());
+			let kb_input = ctx.input(|i| i.key_down(Key::Space));
+			let input_state = mouse_input || kb_input;
 
 			let mut callback = |input: SymbolString| {
 				dbg!(&input.as_string());
