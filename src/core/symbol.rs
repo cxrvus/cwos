@@ -155,6 +155,13 @@ impl SymbolString {
 	pub fn as_string(&self) -> String {
 		self.0.iter().map(|symbol| symbol.character()).collect()
 	}
+
+	pub fn normalized(&self) -> Self {
+		let str = self.as_string();
+		let str = str.trim();
+		// todo: handle [HH]
+		Self::try_from(str.to_string()).unwrap()
+	}
 }
 
 impl TryFrom<String> for SymbolString {

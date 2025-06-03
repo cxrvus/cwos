@@ -9,7 +9,7 @@ pub struct Echo;
 
 impl<T> CwController<T> for Echo {
 	fn tick(&mut self, _: &mut CwContext<T>, input: SymbolString) -> SymbolString {
-		input
+		input.normalized()
 	}
 }
 
