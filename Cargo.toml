@@ -3,6 +3,14 @@ name = "cwos"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "repl"
+path = "src/bin/repl.rs"
+
+[[bin]]
+name = "ui"
+path = "src/bin/ui.rs"
+
 [dependencies]
 # todo: set actual version numbers
 
