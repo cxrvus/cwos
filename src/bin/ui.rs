@@ -1,12 +1,12 @@
 use cwos::core::{
 	config::Config,
 	context::CwContext,
-	controller::{CwController, TestController},
+	controller::{CwController, Echo},
 	database::Database,
 	signal::{Mode, SignalController},
 	symbol::SymbolString,
 };
-use eframe::egui::{self, Color32, Ui};
+use eframe::egui::{self, Color32, Key, Ui};
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
 
 fn main() -> eframe::Result<()> {
@@ -32,7 +32,7 @@ struct CwosApp {
 	audio: AudioController,
 	config: Config,
 	signal_controller: SignalController,
-	cw_controller: TestController,
+	cw_controller: Echo,
 	cw_ctx: CwContext<Database>,
 	time_ms: u32,
 }
@@ -52,7 +52,7 @@ impl CwosApp {
 			signal_controller: SignalController::new(&config.clone()),
 			config,
 			audio,
-			cw_controller: TestController::default(),
+			cw_controller: Echo,
 			cw_ctx: CwContext::<Database>::default(),
 			time_ms: 0,
 		}
@@ -71,11 +71,10 @@ impl eframe::App for CwosApp {
 			let time = ctx.input(|i| i.time);
 			let time_ms = (time * 1000.0) as u32;
 
-			// let beep = self.cw.tick(false, time_ms);
 			let delta_ms = time_ms - self.time_ms;
 			self.time_ms = time_ms;
 
-			let input_state = false; //todo
+			let input_state = ctx.input(|i| i.key_down(Key::Space));
 
 			let mut callback = |input: SymbolString| {
 				dbg!(&input.as_string());
