@@ -1,18 +1,17 @@
 use serde::{Deserialize, Serialize};
-
+/// calculates the ms per unit for a given WPM
+///
+/// ## Formula
+/// `ms/u = 1200/WPM`
+///
+/// => the 1200 represents the milliseconds per word according to the PARIS standard:
+///
+/// => 1200 = 60000 (ms in a minute) / 50 (units in the word "PARIS")
 #[macro_export]
 macro_rules! wpm {
 	($wpm:expr) => {
 		1200 / $wpm
 	};
-}
-
-/// calculates the ms per unit for a given WPM
-#[inline]
-pub fn wpm_to_ms(wpm: u32) -> u32 {
-	// the 1200 represents the milliseconds per word according to the PARIS standard:
-	// 1200 = 60000 [ms in a minute] / 50 [units in the word "PARIS"]
-	wpm!(wpm)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
