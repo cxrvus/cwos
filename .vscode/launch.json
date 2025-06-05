@@ -2,10 +2,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug cwos UI",
+      "name": "Debug CWOS Native",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/target/debug/ui",
+      "program": "${workspaceFolder}/target/debug/native",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"]
+    },
+	{
+      "name": "Debug CWOS CLI",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/target/debug/cli",
       "args": [],
       "cwd": "${workspaceFolder}",
       "sourceLanguages": ["rust"]

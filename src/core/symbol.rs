@@ -148,7 +148,7 @@ impl Symbol {
 	}
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct SymbolString(pub Vec<Symbol>);
 
 impl SymbolString {

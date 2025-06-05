@@ -4,10 +4,10 @@
 
 use std::io::stdin;
 
-use cwos::{apps::launcher::AppLauncher, prelude::*};
+use cwos::{apps::app_launcher, prelude::*};
 
 pub fn main() {
-	let mut controller = AppLauncher::default();
+	let mut controller = CwController::new(Service(app_launcher));
 
 	loop {
 		print!(">> ");
@@ -17,7 +17,7 @@ pub fn main() {
 
 		match SymbolString::try_from(input_str.to_string()) {
 			Ok(input) => {
-				let output = controller.tick(input).as_string();
+				let output = controller.tick(input).cw.as_string();
 				println!("{output}");
 			}
 			Err(error) => {
