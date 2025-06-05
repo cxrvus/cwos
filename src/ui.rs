@@ -49,7 +49,7 @@ impl UiContext {
 		};
 
 		Self {
-			signal_processor: SignalProcessor::new(&config.clone()),
+			signal_processor: SignalProcessor::new(config.clone()),
 			config,
 			audio,
 			cw_controller: AppLauncher::default(),

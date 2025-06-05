@@ -18,8 +18,7 @@ struct Signal {
 
 #[derive(Default)]
 pub struct SignalProcessor {
-	input_config: SignalElementConfig,
-	output_config: SignalElementConfig,
+	config: Config,
 	mode: Mode,
 	buffer: Vec<Signal>,
 	last_input_state: bool,
@@ -35,10 +34,9 @@ impl SignalProcessor {
 		self.mode.clone()
 	}
 
-	pub fn new(config: &Config) -> Self {
+	pub fn new(config: Config) -> Self {
 		Self {
-			input_config: SignalElementConfig::from(config.input.signal),
-			output_config: SignalElementConfig::from(config.output.signal),
+			config,
 			..Default::default()
 		}
 	}
@@ -125,7 +123,7 @@ impl SignalProcessor {
 	}
 
 	fn signals_to_symbols(&self, signals: Vec<Signal>) -> SymbolString {
-		let config = &self.input_config;
+		let config = SignalElementConfig::from(self.config.input.signal);
 
 		let mut elements: ElementString = ElementString(vec![]);
 		let mut symbols: Vec<Symbol> = vec![];
@@ -152,7 +150,7 @@ impl SignalProcessor {
 	}
 
 	fn symbols_to_signals(&self, symbols: SymbolString) -> Vec<Signal> {
-		let config = &self.output_config;
+		let config = SignalElementConfig::from(self.config.output.signal);
 
 		let mut signals: Vec<Signal> = vec![];
 
