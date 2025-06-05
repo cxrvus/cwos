@@ -19,6 +19,7 @@ impl CwController for AppLauncher {
 					self.selected_app = Some(app_name.into());
 					app_name.to_string().try_into().unwrap()
 				}
+				"" => Default::default(),
 				_ => idk(),
 			},
 		}
