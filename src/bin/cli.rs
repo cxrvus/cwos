@@ -17,7 +17,7 @@ pub fn main() {
 
 		match SymbolString::try_from(input_str.to_string()) {
 			Ok(input) => {
-				let output = controller.tick(input).cw.as_string();
+				let output = controller.tick(input).as_string();
 				println!("{output}");
 			}
 			Err(error) => {

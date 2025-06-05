@@ -79,7 +79,7 @@ impl eframe::App for UiContext {
 
 			let mut callback = |input: SymbolString| {
 				dbg!(&input.as_string());
-				let output = self.cw_controller.tick(input).cw;
+				let output = self.cw_controller.tick(input);
 				dbg!(&output.as_string());
 				output
 			};
