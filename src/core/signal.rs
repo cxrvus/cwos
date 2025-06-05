@@ -11,8 +11,8 @@ pub enum Mode {
 }
 
 #[derive(Clone, Debug)]
-struct Signal {
-	value: bool,
+struct Signal<T> {
+	value: T,
 	duration: u32,
 }
 
@@ -20,7 +20,7 @@ struct Signal {
 pub struct SignalProcessor {
 	config: Config,
 	mode: Mode,
-	buffer: Vec<Signal>,
+	buffer: Vec<Signal<bool>>,
 	last_input_state: bool,
 	elapsed_ms: u32,
 }
@@ -122,7 +122,7 @@ impl SignalProcessor {
 		}
 	}
 
-	fn signals_to_symbols(&self, signals: Vec<Signal>) -> SymbolString {
+	fn signals_to_symbols(&self, signals: Vec<Signal<bool>>) -> SymbolString {
 		let config = SignalElementConfig::from(self.config.input.signal);
 
 		let mut elements: ElementString = ElementString(vec![]);
@@ -149,10 +149,10 @@ impl SignalProcessor {
 		SymbolString(symbols)
 	}
 
-	fn symbols_to_signals(&self, symbols: SymbolString) -> Vec<Signal> {
+	fn symbols_to_signals(&self, symbols: SymbolString) -> Vec<Signal<bool>> {
 		let config = SignalElementConfig::from(self.config.output.signal);
 
-		let mut signals: Vec<Signal> = vec![];
+		let mut signals: Vec<Signal<bool>> = vec![];
 
 		for symbol in symbols.0 {
 			if let Symbol::Space = symbol {
