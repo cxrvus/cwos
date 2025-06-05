@@ -1,7 +1,4 @@
-use crate::{
-	apps::{app_launcher, AppState},
-	prelude::*,
-};
+use crate::{apps::AppLauncher, prelude::*};
 use eframe::egui::{self, Color32, IconData, Key, Ui};
 use image::load_from_memory;
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
@@ -36,7 +33,7 @@ pub struct UiContext {
 	audio: AudioContext,
 	config: Config,
 	signal_controller: SignalController,
-	cw_controller: CwController<AppState>,
+	cw_controller: AppLauncher,
 	time_ms: u32,
 }
 
@@ -55,7 +52,7 @@ impl UiContext {
 			signal_controller: SignalController::new(&config.clone()),
 			config,
 			audio,
-			cw_controller: CwController::new(Service(app_launcher)),
+			cw_controller: AppLauncher::default(),
 			time_ms: 0,
 		}
 	}

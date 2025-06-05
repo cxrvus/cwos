@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+
 /// calculates the ms per unit for a given WPM
 ///
 /// ## Formula

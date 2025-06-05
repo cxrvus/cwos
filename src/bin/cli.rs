@@ -4,10 +4,10 @@
 
 use std::io::stdin;
 
-use cwos::{apps::app_launcher, prelude::*};
+use cwos::{apps::AppLauncher, prelude::*};
 
 pub fn main() {
-	let mut controller = CwController::new(Service(app_launcher));
+	let mut controller = AppLauncher::default();
 
 	loop {
 		print!(">> ");

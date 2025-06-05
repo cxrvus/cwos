@@ -1,33 +1,30 @@
 use crate::prelude::*;
 
 #[derive(Default)]
-pub struct AppState {
+pub struct AppLauncher {
 	selected_app: Option<String>,
 }
 
-pub fn app_launcher(state: &mut AppState, input: SymbolString) -> Vec<Action<AppState>> {
-	let input = input.normalized(); // TODO: move normalization into Services
+impl CwController for AppLauncher {
+	fn tick(&mut self, input: SymbolString) -> Response {
+		let input = input.normalized(); // TODO: move normalization into Services
 
-	let action = match state.selected_app {
-		Some(ref app_name) => match app_name.as_str() {
-			"EC" => Action::Call(Service(echo)),
-			_ => idk(),
-		},
-		None => match input.as_string().as_str() {
-			app_name @ "EC" => {
-				state.selected_app = Some(app_name.into());
-				Action::Respond(Response::new(app_name.to_string().try_into().unwrap()))
-			}
-			_ => idk(),
-		},
-	};
-
-	let repeat = Action::Call(Service(app_launcher));
-	vec![action, repeat]
+		match self.selected_app {
+			Some(ref app_name) => match app_name.as_str() {
+				"EC" => Echo.tick(input),
+				_ => idk(),
+			},
+			None => match input.as_string().as_str() {
+				app_name @ "EC" => {
+					self.selected_app = Some(app_name.into());
+					Response::new(app_name.to_string().try_into().unwrap())
+				}
+				_ => idk(),
+			},
+		}
+	}
 }
 
-fn idk<T>() -> Action<T> {
-	Action::Respond(Response::new(
-		SymbolString::try_from("?".to_string()).unwrap(),
-	))
+fn idk() -> Response {
+	Response::new(SymbolString::try_from("?".to_string()).unwrap())
 }
