@@ -32,7 +32,7 @@ struct AudioContext {
 pub struct UiContext {
 	audio: AudioContext,
 	config: Config,
-	signal_controller: SignalController,
+	signal_processor: SignalProcessor,
 	cw_controller: AppLauncher,
 	time_ms: u32,
 }
@@ -49,7 +49,7 @@ impl UiContext {
 		};
 
 		Self {
-			signal_controller: SignalController::new(&config.clone()),
+			signal_processor: SignalProcessor::new(&config.clone()),
 			config,
 			audio,
 			cw_controller: AppLauncher::default(),
@@ -85,11 +85,11 @@ impl eframe::App for UiContext {
 			};
 
 			let signal_on = self
-				.signal_controller
+				.signal_processor
 				.tick(delta_ms, input_state, &mut callback);
 
 			let beep = match signal_on {
-				true => Beep::On(self.signal_controller.get_mode()),
+				true => Beep::On(self.signal_processor.get_mode()),
 				false => Beep::Off,
 			};
 

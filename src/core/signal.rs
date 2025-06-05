@@ -10,16 +10,14 @@ pub enum Mode {
 	Output,
 }
 
-pub struct OutputState(pub bool);
-
 #[derive(Clone, Debug)]
 struct Signal {
-	is_on: bool,
+	value: bool,
 	duration: u32,
 }
 
 #[derive(Default)]
-pub struct SignalController {
+pub struct SignalProcessor {
 	input_config: SignalElementConfig,
 	output_config: SignalElementConfig,
 	mode: Mode,
@@ -30,7 +28,7 @@ pub struct SignalController {
 
 type TickCallback<'a> = &'a mut dyn FnMut(SymbolString) -> SymbolString;
 
-impl SignalController {
+impl SignalProcessor {
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
 	pub fn get_mode(&self) -> Mode {
@@ -67,7 +65,7 @@ impl SignalController {
 			(false, true) | (true, false) => {
 				self.buffer.push(Signal {
 					duration: self.elapsed_ms,
-					is_on: last_input_state,
+					value: last_input_state,
 				});
 
 				self.elapsed_ms = 0;
@@ -79,7 +77,7 @@ impl SignalController {
 				if self.elapsed_ms >= Self::MAX_MS {
 					self.buffer.push(Signal {
 						duration: self.elapsed_ms,
-						is_on: false,
+						value: false,
 					});
 
 					let input_signals = self.buffer.clone();
@@ -108,7 +106,7 @@ impl SignalController {
 		}
 
 		if let Some(signal) = self.buffer.first() {
-			let output_state = signal.is_on;
+			let output_state = signal.value;
 
 			if self.elapsed_ms >= signal.duration {
 				self.elapsed_ms = 0;
@@ -133,7 +131,7 @@ impl SignalController {
 		let mut symbols: Vec<Symbol> = vec![];
 
 		for signal in signals {
-			if signal.is_on {
+			if signal.value {
 				// todo: send Error Correction symbol if ms >= max
 				// add a dah (true) or a dit (false)
 				elements.0.push(signal.duration >= config.dah_ms);
@@ -162,21 +160,21 @@ impl SignalController {
 			if let Symbol::Space = symbol {
 				// remove the last silent signal element
 				if let Some(last) = signals.last() {
-					if !last.is_on {
+					if !last.value {
 						signals.pop();
 					}
 				}
 
 				// add a space
 				signals.push(Signal {
-					is_on: false,
+					value: false,
 					duration: config.space_ms,
 				});
 			} else {
 				for signal in symbol.elements().0 {
 					// push either a dit or a dah
 					signals.push(Signal {
-						is_on: true,
+						value: true,
 						duration: match signal {
 							true => config.dah_ms,
 							false => config.dit_ms,
@@ -185,7 +183,7 @@ impl SignalController {
 
 					// element break - the duration of silence after each signal element is one dit
 					signals.push(Signal {
-						is_on: false,
+						value: false,
 						duration: config.dit_ms,
 					});
 				}
@@ -195,7 +193,7 @@ impl SignalController {
 
 				// add a break
 				signals.push(Signal {
-					is_on: false,
+					value: false,
 					duration: config.break_ms,
 				});
 			}
