@@ -6,7 +6,7 @@ pub struct AppLauncher {
 }
 
 impl CwController for AppLauncher {
-	fn tick(&mut self, ctx: &mut InputContext) {
+	fn tick(&mut self, ctx: &mut CwContext) {
 		match self.selected_app {
 			Some(ref app_name) => match app_name.as_str() {
 				"EC" => Echo.tick(ctx),
