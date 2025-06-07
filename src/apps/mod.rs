@@ -6,26 +6,24 @@ pub struct AppLauncher {
 }
 
 impl CwController for AppLauncher {
-	fn tick(&mut self, input: SymbolString) -> SymbolString {
-		let input = input.normalized(); // TODO: move normalization into Services
-
+	fn tick(&mut self, ctx: &mut InputContext) {
 		match self.selected_app {
 			Some(ref app_name) => match app_name.as_str() {
-				"EC" => Echo.tick(input),
-				_ => idk(),
+				"EC" => Echo.tick(ctx),
+				_ => idk(ctx),
 			},
-			None => match input.as_string().as_str() {
+			None => match ctx.input().as_string().as_str() {
 				app_name @ "EC" => {
 					self.selected_app = Some(app_name.into());
-					app_name.to_string().try_into().unwrap()
+					ctx.set_output(app_name.to_string().try_into().unwrap())
 				}
 				"" => Default::default(),
-				_ => idk(),
+				_ => idk(ctx),
 			},
 		}
 	}
 }
 
-fn idk() -> SymbolString {
-	SymbolString::try_from("?".to_string()).unwrap()
+fn idk(ctx: &mut InputContext) {
+	ctx.set_output(SymbolString(vec![Symbol::Question]));
 }
