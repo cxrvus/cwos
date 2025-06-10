@@ -1,7 +1,15 @@
 use crate::prelude::Config;
 
-pub trait CwContext {
-	fn config(&self) -> Config;
-	fn linear_input(&self) -> bool;
-	fn set_linear_output(&mut self, value: bool);
+pub trait CwContext<Input, Output> {
+	/// get current input state
+	fn input(&self) -> Input;
+
+	/// set current output state
+	fn set_output(&mut self, value: Output);
+
+	/// get current configuration
+	fn config(&self) -> &Config;
+
+	/// get current time in milliseconds
+	fn time(&self) -> u32;
 }

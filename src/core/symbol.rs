@@ -149,9 +149,9 @@ impl Symbol {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
-pub struct SymbolString(pub Vec<Symbol>);
+pub struct CwString(pub Vec<Symbol>);
 
-impl SymbolString {
+impl CwString {
 	pub fn as_string(&self) -> String {
 		self.0.iter().map(|symbol| symbol.character()).collect()
 	}
@@ -164,7 +164,7 @@ impl SymbolString {
 	}
 }
 
-impl TryFrom<String> for SymbolString {
+impl TryFrom<String> for CwString {
 	fn try_from(string: String) -> Result<Self> {
 		let symbols = string
 			.to_ascii_uppercase()
