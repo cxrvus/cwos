@@ -2,7 +2,7 @@ use crate::prelude::*;
 use eframe::egui::{self, Color32, IconData, Key, Ui};
 use image::load_from_memory;
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
-use std::sync::Arc;
+use std::{sync::Arc, time::SystemTime};
 
 pub fn load_icon() -> Option<Arc<IconData>> {
 	let bytes = include_bytes!("../assets/icon.png");
@@ -24,45 +24,19 @@ pub fn create_app() -> App {
 
 #[derive(Default)]
 struct UiContext {
-	egui_ctx: egui::Context,
-	audio: AudioState,
 	config: Config,
-	output_color: Color32,
 }
 
-impl CwContext<bool, Option<u32>> for UiContext {
-	fn input(&self) -> bool {
-		let mouse_input = self.egui_ctx.input(|i| i.pointer.primary_down());
-		let kb_input = self.egui_ctx.input(|i| i.key_down(Key::Space));
-		mouse_input || kb_input
-	}
-
-	fn set_output(&mut self, signal: Option<u32>) {
-		let color = match signal {
-			// TODO
-			// Some(_) => match self.controller.get_mode() {
-			// 	Mode::Output => OUTPUT_COLOR,
-			// 	Mode::Input => INPUT_COLOR,
-			// },
-			Some(_) => INPUT_COLOR,
-			None => OFF_COLOR,
-		};
-
-		if self.audio.last_signal != signal {
-			self.audio.sink = get_audio_sink(&self.audio.stream_handle, signal);
-		}
-
-		self.audio.last_signal = signal;
-		self.output_color = color;
-	}
-
+impl CwContext for UiContext {
 	fn config(&self) -> &Config {
 		&self.config
 	}
 
 	fn time(&self) -> u32 {
-		let time = self.egui_ctx.input(|i| i.time);
-		(time * 1000.0) as u32
+		SystemTime::now()
+			.duration_since(SystemTime::UNIX_EPOCH)
+			.map(|d| d.as_millis() as u32)
+			.unwrap()
 	}
 }
 
@@ -92,27 +66,38 @@ const OUTPUT_COLOR: Color32 = Color32::from_gray(128);
 
 #[derive(Default)]
 pub struct App {
-	cw_ctx: UiContext,
+	audio: AudioState,
 	controller: LinearController<AppLauncher>,
 }
 
 impl eframe::App for App {
-	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-		egui::CentralPanel::default().show(ctx, |ui| {
-			ctx.request_repaint();
+	fn update(&mut self, egui_ctx: &egui::Context, _frame: &mut eframe::Frame) {
+		egui::CentralPanel::default().show(egui_ctx, |ui| {
+			egui_ctx.request_repaint();
 
-			self.controller.tick(&mut self.cw_ctx);
+			let mouse_input = egui_ctx.input(|i| i.pointer.primary_down());
+			let kb_input = egui_ctx.input(|i| i.key_down(Key::Space));
+			let input = mouse_input || kb_input;
 
-			draw_circle(ui, self.cw_ctx.output_color);
+			let mut cw_ctx = UiContext::default();
 
-			// let mut callback = |input: CwString| {
-			// 	dbg!(&input.as_string());
-			// 	let output = self.cw_controller.tick(input);
-			// 	dbg!(&output.as_string());
-			// 	output
-			// };
+			let signal = self.controller.tick(&mut cw_ctx, input);
 
-			// let signal_on = self.controller.tick(delta_ms, input_state, &mut callback);
+			let color = match signal {
+				Some(_) => match self.controller.get_mode() {
+					Mode::Output => OUTPUT_COLOR,
+					Mode::Input => INPUT_COLOR,
+				},
+				None => OFF_COLOR,
+			};
+
+			if self.audio.last_signal != signal {
+				self.audio.sink = get_audio_sink(&self.audio.stream_handle, signal);
+			}
+
+			self.audio.last_signal = signal;
+
+			draw_circle(ui, color);
 		});
 	}
 }

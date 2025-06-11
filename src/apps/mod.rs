@@ -3,8 +3,8 @@ use crate::prelude::*;
 #[derive(Default)]
 pub struct Echo;
 
-impl TextController for Echo {
-	fn tick(&mut self, ctx: &mut impl CwContext<CwString, CwString>) {
-		ctx.set_output(ctx.input());
+impl CwController<CwString, CwString> for Echo {
+	fn tick(&mut self, _ctx: &mut impl CwContext, input: CwString) -> CwString {
+		input
 	}
 }

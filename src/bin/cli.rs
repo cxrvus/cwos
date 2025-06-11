@@ -6,20 +6,10 @@ use cwos::prelude::*;
 use std::io::stdin;
 
 #[derive(Default)]
-struct CliContext {
-	input: CwString,
-	output: CwString,
-}
+struct CliContext;
 
-impl CwContext<CwString, CwString> for CliContext {
-	fn input(&self) -> CwString {
-		self.input.clone()
-	}
-
-	fn set_output(&mut self, value: CwString) {
-		self.output = value;
-	}
-
+// TODO: use StdContext (merged with UiContext)
+impl CwContext for CliContext {
 	fn config(&self) -> &Config {
 		todo!()
 	}
@@ -40,12 +30,8 @@ pub fn main() {
 
 		match CwString::try_from(input_str.to_string()) {
 			Ok(input) => {
-				let mut ctx = CliContext {
-					input,
-					..Default::default()
-				};
-				controller.tick(&mut ctx);
-				let output = ctx.output.as_string();
+				let mut ctx = CliContext;
+				let output = controller.tick(&mut ctx, input).as_string();
 
 				println!("{output}");
 			}

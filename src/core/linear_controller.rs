@@ -19,7 +19,7 @@ struct Signal<T> {
 }
 
 #[derive(Default)]
-pub struct LinearController<C: TextController> {
+pub struct LinearController<C: CwController<CwString, CwString>> {
 	controller: C,
 	mode: Mode,
 	buffer: Vec<Signal<bool>>,
@@ -28,60 +28,34 @@ pub struct LinearController<C: TextController> {
 	last_time: u32,
 }
 
-#[derive(Default)]
-struct TextContext {
-	input: CwString,
-	output: CwString,
-	config: Config,
-	time: u32,
-}
-
-impl CwContext<CwString, CwString> for TextContext {
-	fn input(&self) -> CwString {
-		self.input.clone()
-	}
-
-	fn set_output(&mut self, value: CwString) {
-		self.output = value;
-	}
-
-	fn config(&self) -> &Config {
-		&self.config
-	}
-
-	fn time(&self) -> u32 {
-		self.time
-	}
-}
-
-type TickCallback<'a> = &'a mut dyn FnMut(CwString) -> CwString;
-
-impl<C: TextController> LinearController<C> {
+impl<C: CwController<CwString, CwString>> LinearController<C> {
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
-	pub fn tick(&mut self, outer_ctx: &mut impl CwContext<bool, Option<u32>>) {
-		let time = outer_ctx.time();
+	// TODO: move to trait impl
+	pub fn tick(&mut self, ctx: &mut impl CwContext, input: bool) -> Option<u32> {
+		let time = ctx.time();
 		if self.last_time == 0 {
 			self.last_time = time;
 		}
-		self.elapsed_ms = time - self.last_time;
-
-		let input = outer_ctx.input();
+		let delta_ms = time - self.last_time;
+		self.elapsed_ms += delta_ms;
 
 		let signal_on = match self.mode {
-			Mode::Input => self.input_tick(outer_ctx),
-			Mode::Output => self.output_tick(outer_ctx),
+			Mode::Input => self.input_tick(ctx, input),
+			Mode::Output => self.output_tick(ctx, input),
 		};
 
 		let signal = match signal_on {
 			true => Some(match self.mode {
-				Mode::Input => outer_ctx.config().input.signal.freq,
-				Mode::Output => outer_ctx.config().output.signal.freq,
+				Mode::Input => ctx.config().input.signal.freq,
+				Mode::Output => ctx.config().output.signal.freq,
 			}),
 			false => None,
 		};
 
-		outer_ctx.set_output(signal);
+		self.last_time = time;
+
+		signal
 	}
 
 	pub fn get_mode(&self) -> Mode {
@@ -101,8 +75,7 @@ impl<C: TextController> LinearController<C> {
 		self.elapsed_ms = 0;
 	}
 
-	fn input_tick(&mut self, outer_ctx: &mut impl CwContext<bool, Option<u32>>) -> bool {
-		let input_state = outer_ctx.input();
+	fn input_tick(&mut self, ctx: &mut impl CwContext, input_state: bool) -> bool {
 		let last_input_state = self.last_input_state;
 
 		match (last_input_state, input_state) {
@@ -125,22 +98,15 @@ impl<C: TextController> LinearController<C> {
 					});
 
 					let input_signals = self.buffer.clone();
-					let input = Self::signals_to_symbols(input_signals, outer_ctx.config());
+					let input = Self::signals_to_symbols(input_signals, ctx.config());
 
-					let mut text_ctx = TextContext {
-						input,
-						time: outer_ctx.time(),
-						config: outer_ctx.config().to_owned(),
-						..Default::default()
-					};
-
-					self.controller.tick(&mut text_ctx);
-					let output = Self::symbols_to_signals(text_ctx.output, outer_ctx.config());
+					let output = self.controller.tick(ctx, input);
+					let output_signals = Self::symbols_to_signals(output, ctx.config());
 
 					self.reset();
 					self.mode = Mode::Output;
 
-					self.buffer = output;
+					self.buffer = output_signals;
 				}
 			}
 			(true, true) => {}
@@ -150,13 +116,11 @@ impl<C: TextController> LinearController<C> {
 		input_state
 	}
 
-	fn output_tick(&mut self, outer_ctx: &mut impl CwContext<bool, Option<u32>>) -> bool {
-		let input_state = outer_ctx.input();
-
+	fn output_tick(&mut self, ctx: &mut impl CwContext, input_state: bool) -> bool {
 		if input_state {
 			self.mode = Mode::Input;
 			self.reset();
-			return self.input_tick(outer_ctx);
+			return self.input_tick(ctx, input_state);
 		}
 
 		if let Some(signal) = self.buffer.first() {
