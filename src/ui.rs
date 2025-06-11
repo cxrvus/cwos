@@ -19,14 +19,15 @@ pub fn load_icon() -> Option<Arc<IconData>> {
 }
 
 pub fn create_app() -> App {
-	App::new(Config::default())
+	App::default()
 }
 
 #[derive(Default)]
 struct UiContext {
 	egui_ctx: egui::Context,
-	app: App,
-	controller: LinearController<AppLauncher>,
+	audio: AudioState,
+	config: Config,
+	output_color: Color32,
 }
 
 impl CwContext<bool, Option<u32>> for UiContext {
@@ -38,23 +39,25 @@ impl CwContext<bool, Option<u32>> for UiContext {
 
 	fn set_output(&mut self, signal: Option<u32>) {
 		let color = match signal {
-			Some(_) => match self.controller.get_mode() {
-				Mode::Output => OUTPUT_COLOR,
-				Mode::Input => INPUT_COLOR,
-			},
+			// TODO
+			// Some(_) => match self.controller.get_mode() {
+			// 	Mode::Output => OUTPUT_COLOR,
+			// 	Mode::Input => INPUT_COLOR,
+			// },
+			Some(_) => INPUT_COLOR,
 			None => OFF_COLOR,
 		};
 
-		if self.app.audio.last_signal != signal {
-			self.app.audio.sink = get_audio_sink(&self.app.audio.stream_handle, signal);
+		if self.audio.last_signal != signal {
+			self.audio.sink = get_audio_sink(&self.audio.stream_handle, signal);
 		}
 
-		self.app.audio.last_signal = signal;
-		self.app.output_color = color;
+		self.audio.last_signal = signal;
+		self.output_color = color;
 	}
 
 	fn config(&self) -> &Config {
-		&self.app.config
+		&self.config
 	}
 
 	fn time(&self) -> u32 {
@@ -70,34 +73,16 @@ struct AudioState {
 	last_signal: Option<u32>,
 }
 
-pub struct App {
-	audio: AudioState,
-	config: Config,
-	output_color: Color32,
-}
-
-impl App {
-	fn new(config: Config) -> Self {
+impl Default for AudioState {
+	fn default() -> Self {
 		let (stream, stream_handle) = OutputStream::try_default().expect("Audio init failed");
 
-		let audio = AudioState {
+		Self {
 			_stream: stream,
 			stream_handle,
 			sink: None,
 			last_signal: None,
-		};
-
-		Self {
-			config,
-			audio,
-			output_color: OFF_COLOR,
 		}
-	}
-}
-
-impl Default for App {
-	fn default() -> Self {
-		Self::new(Config::default())
 	}
 }
 
@@ -105,14 +90,20 @@ const OFF_COLOR: Color32 = Color32::from_gray(64);
 const INPUT_COLOR: Color32 = Color32::from_gray(192);
 const OUTPUT_COLOR: Color32 = Color32::from_gray(128);
 
+#[derive(Default)]
+pub struct App {
+	cw_ctx: UiContext,
+	controller: LinearController<AppLauncher>,
+}
+
 impl eframe::App for App {
 	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 		egui::CentralPanel::default().show(ctx, |ui| {
 			ctx.request_repaint();
 
-			// TODO: actually tick controller
+			self.controller.tick(&mut self.cw_ctx);
 
-			draw_circle(ui, self.output_color);
+			draw_circle(ui, self.cw_ctx.output_color);
 
 			// let mut callback = |input: CwString| {
 			// 	dbg!(&input.as_string());

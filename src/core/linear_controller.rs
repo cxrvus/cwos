@@ -59,7 +59,7 @@ type TickCallback<'a> = &'a mut dyn FnMut(CwString) -> CwString;
 impl<C: TextController> LinearController<C> {
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
-	fn tick(&mut self, outer_ctx: &mut impl CwContext<bool, Option<u32>>) {
+	pub fn tick(&mut self, outer_ctx: &mut impl CwContext<bool, Option<u32>>) {
 		let time = outer_ctx.time();
 		if self.last_time == 0 {
 			self.last_time = time;
