@@ -1,8 +1,8 @@
-use crate::prelude::*;
+use crate::{prelude::*, std_context::StdContext};
 use eframe::egui::{self, Color32, IconData, Key, Ui};
 use image::load_from_memory;
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
-use std::{sync::Arc, time::SystemTime};
+use std::sync::Arc;
 
 pub fn load_icon() -> Option<Arc<IconData>> {
 	let bytes = include_bytes!("../assets/icon.png");
@@ -20,22 +20,6 @@ pub fn load_icon() -> Option<Arc<IconData>> {
 
 pub fn create_app() -> App {
 	App::default()
-}
-
-#[derive(Default)]
-struct UiContext;
-
-impl CwContext for UiContext {
-	fn config(&self) -> CwConfig {
-		CwConfig::default()
-	}
-
-	fn time(&self) -> u32 {
-		SystemTime::now()
-			.duration_since(SystemTime::UNIX_EPOCH)
-			.map(|d| d.as_millis() as u32)
-			.unwrap()
-	}
 }
 
 struct AudioState {
@@ -77,7 +61,7 @@ impl eframe::App for App {
 			let kb_input = egui_ctx.input(|i| i.key_down(Key::Space));
 			let input = mouse_input || kb_input;
 
-			let mut cw_ctx = UiContext;
+			let mut cw_ctx = StdContext;
 
 			let signal = self.controller.tick(&mut cw_ctx, input);
 

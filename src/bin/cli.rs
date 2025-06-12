@@ -2,22 +2,8 @@
 // idea: provide config as file
 // idea: add modes: dot/dash mode, string mode etc
 
-use cwos::prelude::*;
+use cwos::{prelude::*, std_context::StdContext};
 use std::io::stdin;
-
-#[derive(Default)]
-struct CliContext;
-
-// TODO: use StdContext (merged with UiContext)
-impl CwContext for CliContext {
-	fn config(&self) -> CwConfig {
-		todo!()
-	}
-
-	fn time(&self) -> u32 {
-		todo!()
-	}
-}
 
 pub fn main() {
 	let mut controller = AppLauncher::default();
@@ -30,7 +16,7 @@ pub fn main() {
 
 		match CwString::try_from(input_str.to_string()) {
 			Ok(input) => {
-				let mut ctx = CliContext;
+				let mut ctx = StdContext;
 				let output = controller.tick(&mut ctx, input).as_string();
 
 				println!("{output}");
