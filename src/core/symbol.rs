@@ -67,7 +67,7 @@ struct SymbolSpec(char, &'static str, Group, CwSymbol);
 #[rustfmt::skip]
 impl SymbolSpec {
 	pub fn character(&self) -> char { self.0 }
-	pub fn elements(&self) -> CwElementString { CwElementString::from(self.1.to_string()) }
+	pub fn elements(&self) -> CwElementString { CwElementString::new(self.1.to_string()) }
 	pub fn group(&self) -> Group { self.2.clone() }
 	pub fn symbol(&self) -> CwSymbol { self.3.clone() }
 }

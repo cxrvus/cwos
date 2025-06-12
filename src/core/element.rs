@@ -12,10 +12,8 @@ impl CwElementString {
 				.collect::<String>()
 		}
 	}
-}
 
-impl From<String> for CwElementString {
-	fn from(element_str: String) -> Self {
+	pub fn new(element_str: String) -> Self {
 		if element_str.is_empty() {
 			return Self::default();
 		}
