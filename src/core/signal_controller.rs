@@ -19,7 +19,7 @@ struct Signal<T> {
 }
 
 #[derive(Default)]
-pub struct LinearController<C: CwController<CwString, CwString>> {
+pub struct SignalController<C: CwController<CwString, CwString>> {
 	controller: C,
 	mode: Mode,
 	buffer: Vec<Signal<bool>>,
@@ -28,7 +28,7 @@ pub struct LinearController<C: CwController<CwString, CwString>> {
 	last_time: u32,
 }
 
-impl<C: CwController<CwString, CwString>> LinearController<C> {
+impl<C: CwController<CwString, CwString>> SignalController<C> {
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
 	// TODO: move to trait impl

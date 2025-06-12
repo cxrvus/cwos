@@ -65,7 +65,7 @@ const OUTPUT_COLOR: Color32 = Color32::from_gray(128);
 #[derive(Default)]
 pub struct App {
 	audio: AudioState,
-	controller: LinearController<AppLauncher>,
+	controller: SignalController<AppLauncher>,
 }
 
 impl eframe::App for App {
