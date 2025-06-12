@@ -16,12 +16,12 @@ macro_rules! wpm {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Config {
+pub struct CwConfig {
 	pub input: InputConfig,
 	pub output: OutputConfig,
 }
 
-impl Default for Config {
+impl Default for CwConfig {
 	fn default() -> Self {
 		Self {
 			output: OutputConfig {

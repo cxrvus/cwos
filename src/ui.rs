@@ -26,8 +26,8 @@ pub fn create_app() -> App {
 struct UiContext;
 
 impl CwContext for UiContext {
-	fn config(&self) -> Config {
-		Config::default()
+	fn config(&self) -> CwConfig {
+		CwConfig::default()
 	}
 
 	fn time(&self) -> u32 {

@@ -142,7 +142,7 @@ impl<C: CwController<CwString, CwString>> LinearController<C> {
 		}
 	}
 
-	fn signals_to_symbols(signals: Vec<Signal<bool>>, config: &Config) -> CwString {
+	fn signals_to_symbols(signals: Vec<Signal<bool>>, config: &CwConfig) -> CwString {
 		let config = SignalElementConfig::from(config.input.signal);
 
 		let mut elements: ElementString = ElementString(vec![]);
@@ -169,7 +169,7 @@ impl<C: CwController<CwString, CwString>> LinearController<C> {
 		CwString(symbols)
 	}
 
-	fn symbols_to_signals(symbols: CwString, config: &Config) -> Vec<Signal<bool>> {
+	fn symbols_to_signals(symbols: CwString, config: &CwConfig) -> Vec<Signal<bool>> {
 		let config = SignalElementConfig::from(config.output.signal);
 
 		let mut signals: Vec<Signal<bool>> = vec![];
