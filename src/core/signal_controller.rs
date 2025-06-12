@@ -15,7 +15,7 @@ struct Signal<T> {
 
 #[derive(Default)]
 pub struct SignalController<C: CwController<CwString, CwString>> {
-	controller: C,
+	symbol_controller: C,
 	mode: Mode,
 	buffer: Vec<Signal<bool>>,
 	last_input_state: bool,
@@ -55,7 +55,7 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 
 	pub fn new(controller: C) -> Self {
 		Self {
-			controller,
+			symbol_controller: controller,
 			..Default::default()
 		}
 	}
@@ -95,7 +95,7 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 					let input_signals = self.buffer.clone();
 					let input = Self::signals_to_symbols(input_signals, &ctx.config());
 
-					let output = self.controller.tick(ctx, input);
+					let output = self.symbol_controller.tick(ctx, input);
 					let output_signals = Self::symbols_to_signals(output, &ctx.config());
 
 					self.reset();

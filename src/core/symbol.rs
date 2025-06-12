@@ -2,18 +2,18 @@ use crate::prelude::CwElementString;
 
 impl CwSymbol {
 	pub fn character(&self) -> char {
-		self.get_spec().character()
+		self.spec().character()
 	}
 
 	pub fn elements(&self) -> CwElementString {
-		self.get_spec().elements()
+		self.spec().elements()
 	}
 
 	pub fn group(&self) -> Group {
-		self.get_spec().group()
+		self.spec().group()
 	}
 
-	fn get_spec(&self) -> &SymbolSpec {
+	fn spec(&self) -> &SymbolSpec {
 		SYMBOL_SPEC
 			.iter()
 			.find(|spec| spec.symbol() == *self)
@@ -41,10 +41,6 @@ impl CwSymbol {
 pub struct CwString(pub Vec<CwSymbol>);
 
 impl CwString {
-	pub fn as_string(&self) -> String {
-		self.0.iter().map(|symbol| symbol.character()).collect()
-	}
-
 	pub fn new(str: &str) -> Self {
 		Self(
 			str.to_ascii_uppercase()
@@ -52,6 +48,10 @@ impl CwString {
 				.map(CwSymbol::from_char)
 				.collect::<Vec<CwSymbol>>(),
 		)
+	}
+
+	pub fn as_string(&self) -> String {
+		self.0.iter().map(|symbol| symbol.character()).collect()
 	}
 
 	pub fn normalized(&self) -> Self {
