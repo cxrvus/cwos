@@ -140,8 +140,8 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 	fn signals_to_symbols(signals: Vec<Signal<bool>>, config: &CwConfig) -> CwString {
 		let config = SignalElementConfig::from(config.input.signal);
 
-		let mut elements = ElementString(vec![]);
-		let mut symbols: Vec<Symbol> = vec![];
+		let mut elements = CwElementString(vec![]);
+		let mut symbols: Vec<CwSymbol> = vec![];
 
 		for signal in signals {
 			if signal.value {
@@ -151,12 +151,12 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 			} else if signal.duration >= config.break_ms {
 				dbg!(elements.clone());
 				// convert elements to a symbol if silence qualifies for a character break
-				symbols.push(Symbol::from_elements(&elements));
+				symbols.push(CwSymbol::from_elements(&elements));
 				elements.0.clear();
 
 				// add a space
 				if signal.duration > config.space_ms {
-					symbols.push(Symbol::Space);
+					symbols.push(CwSymbol::Space);
 				}
 			}
 		}
@@ -170,7 +170,7 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 		let mut signals: Vec<Signal<bool>> = vec![];
 
 		for symbol in symbols.0 {
-			if let Symbol::Space = symbol {
+			if let CwSymbol::Space = symbol {
 				// remove the last silent signal element
 				if let Some(last) = signals.last() {
 					if !last.value {

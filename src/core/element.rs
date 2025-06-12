@@ -1,7 +1,7 @@
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub struct ElementString(pub Vec<bool>);
+pub struct CwElementString(pub Vec<bool>);
 
-impl ElementString {
+impl CwElementString {
 	pub fn to_dot_string(&self) -> String {
 		if self.0.is_empty() {
 			" / ".to_string()
@@ -14,7 +14,7 @@ impl ElementString {
 	}
 }
 
-impl From<String> for ElementString {
+impl From<String> for CwElementString {
 	fn from(element_str: String) -> Self {
 		if element_str.is_empty() {
 			return Self::default();

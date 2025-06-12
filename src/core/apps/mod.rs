@@ -7,7 +7,7 @@ pub struct AppLauncher {
 
 impl CwController<CwString, CwString> for AppLauncher {
 	fn tick(&mut self, ctx: &mut impl CwContext, input: CwString) -> CwString {
-		use Symbol::*;
+		use CwSymbol::*;
 
 		match &self.selected_app {
 			Some(app_name) => match app_name.0.as_slice() {
@@ -27,7 +27,7 @@ impl CwController<CwString, CwString> for AppLauncher {
 }
 
 fn idk() -> CwString {
-	CwString(vec![Symbol::Question])
+	CwString(vec![CwSymbol::Question])
 }
 
 #[derive(Default)]
