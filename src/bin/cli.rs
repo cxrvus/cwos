@@ -2,9 +2,8 @@
 // idea: provide config as file
 // idea: add modes: dot/dash mode, string mode etc
 
+use cwos::{core::apps::AppLauncher, prelude::*, std_context::StdContext};
 use std::io::stdin;
-
-use cwos::{apps::AppLauncher, prelude::*};
 
 pub fn main() {
 	let mut controller = AppLauncher::default();
@@ -15,15 +14,11 @@ pub fn main() {
 		stdin().read_line(&mut input_str).unwrap();
 		let input_str = input_str.trim();
 
-		match SymbolString::try_from(input_str.to_string()) {
-			Ok(input) => {
-				let output = controller.tick(input).as_string();
-				println!("{output}");
-			}
-			Err(error) => {
-				println!("<!> Error: {}", error);
-			}
-		};
+		let input = CwString::from(input_str);
+		let mut ctx = StdContext;
+		let output = String::from(&controller.tick(&mut ctx, input));
+
+		println!("{output}");
 
 		println!();
 	}

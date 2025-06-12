@@ -1,40 +1,87 @@
-use anyhow::{anyhow, Result};
-#[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub struct ElementString(pub Vec<bool>);
+use crate::prelude::CwElementString;
 
-impl ElementString {
-	pub fn to_dot_string(&self) -> String {
-		if self.0.is_empty() {
-			" / ".to_string()
-		} else {
-			self.0
-				.iter()
-				.map(|&element| if element { "-" } else { "." })
-				.collect::<String>()
-		}
+impl CwSymbol {
+	pub fn character(&self) -> char {
+		self.spec().character()
+	}
+
+	pub fn elements(&self) -> CwElementString {
+		self.spec().elements()
+	}
+
+	pub fn group(&self) -> Group {
+		self.spec().group()
+	}
+
+	fn spec(&self) -> &SymbolSpec {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.symbol() == *self)
+			.unwrap()
 	}
 }
 
-impl From<String> for ElementString {
-	fn from(element_str: String) -> Self {
-		if element_str.is_empty() {
-			return Self::default();
-		}
-
-		let mut elements = vec![];
-
-		for signal_char in element_str.chars() {
-			let element = match signal_char {
-				'.' => false,
-				'-' => true,
-				_ => panic!("char may only be '.' or '-'"),
-			};
-
-			elements.push(element);
-		}
-
-		Self(elements)
+impl From<char> for CwSymbol {
+	fn from(c: char) -> Self {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.character() == c.to_ascii_uppercase())
+			.map(|spec| spec.symbol().clone())
+			.unwrap_or(CwSymbol::Invalid)
 	}
+}
+
+impl From<&CwElementString> for CwSymbol {
+	fn from(elements: &CwElementString) -> Self {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.elements() == *elements)
+			.map(|spec| spec.symbol().clone())
+			.unwrap_or(Self::Invalid)
+	}
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
+pub struct CwString(pub Vec<CwSymbol>);
+
+impl CwString {
+	pub fn normalized(&self) -> Self {
+		let str = String::from(self);
+		let str = str.trim();
+		// todo: handle [HH]
+		Self::from(str)
+	}
+}
+
+impl From<&str> for CwString {
+	fn from(s: &str) -> Self {
+		Self(
+			s.to_ascii_uppercase()
+				.chars()
+				.map(CwSymbol::from)
+				.collect::<Vec<CwSymbol>>(),
+		)
+	}
+}
+
+impl From<&CwString> for String {
+	fn from(cw_string: &CwString) -> Self {
+		cw_string
+			.0
+			.iter()
+			.map(|symbol| symbol.character())
+			.collect()
+	}
+}
+
+struct SymbolSpec(char, &'static str, Group, CwSymbol);
+
+#[rustfmt::skip]
+impl SymbolSpec {
+	pub fn character(&self) -> char { self.0 }
+	pub fn elements(&self) -> CwElementString { CwElementString::new(self.1.to_string()) }
+	pub fn group(&self) -> Group { self.2.clone() }
+	pub fn symbol(&self) -> CwSymbol { self.3.clone() }
 }
 
 #[derive(Clone)]
@@ -47,7 +94,7 @@ pub enum Group {
 }
 
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub enum Symbol {
+pub enum CwSymbol {
 	#[default]
 	Space,
 	A,
@@ -111,141 +158,64 @@ pub enum Symbol {
 	SOS,
 }
 
-impl Symbol {
-	pub fn character(&self) -> char {
-		self.get_spec().character()
-	}
-
-	pub fn elements(&self) -> ElementString {
-		self.get_spec().elements()
-	}
-
-	pub fn group(&self) -> Group {
-		self.get_spec().group()
-	}
-
-	fn get_spec(&self) -> &SymbolSpec {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.symbol() == *self)
-			.unwrap()
-	}
-
-	pub fn from_elements(elements: &ElementString) -> Self {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.elements() == *elements)
-			.map(|spec| spec.symbol().clone())
-			.unwrap_or(Self::Invalid)
-	}
-
-	pub fn from_char(char: char) -> Result<Self> {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.character() == char.to_ascii_uppercase())
-			.map(|spec| spec.symbol().clone())
-			.ok_or_else(|| anyhow!("invalid plaintext char: {:?}", char))
-	}
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Eq)]
-pub struct SymbolString(pub Vec<Symbol>);
-
-impl SymbolString {
-	pub fn as_string(&self) -> String {
-		self.0.iter().map(|symbol| symbol.character()).collect()
-	}
-
-	pub fn normalized(&self) -> Self {
-		let str = self.as_string();
-		let str = str.trim();
-		// todo: handle [HH]
-		Self::try_from(str.to_string()).unwrap()
-	}
-}
-
-impl TryFrom<String> for SymbolString {
-	fn try_from(string: String) -> Result<Self> {
-		let symbols = string
-			.to_ascii_uppercase()
-			.chars()
-			.map(Symbol::from_char)
-			.collect::<Result<Vec<Symbol>>>()?;
-
-		Ok(Self(symbols))
-	}
-
-	type Error = anyhow::Error;
-}
-
-struct SymbolSpec(char, &'static str, Group, Symbol);
-
-#[rustfmt::skip]
-impl SymbolSpec {
-	pub fn character(&self) -> char { self.0 }
-	pub fn elements(&self) -> ElementString { ElementString::from(self.1.to_string()) }
-	pub fn group(&self) -> Group { self.2.clone() }
-	pub fn symbol(&self) -> Symbol { self.3.clone() }
-}
-
 #[rustfmt::skip]
 static SYMBOL_SPEC: [SymbolSpec; 58] = [
-	SymbolSpec(' ',		"",			Group::Void,		Symbol::Space),
-	SymbolSpec('A',		".-",		Group::Letter,		Symbol::A),
-	SymbolSpec('B',		"-...",		Group::Letter,		Symbol::B),
-	SymbolSpec('C',		"-.-.",		Group::Letter,		Symbol::C),
-	SymbolSpec('D',		"-..",		Group::Letter,		Symbol::D),
-	SymbolSpec('E',		".",		Group::Letter,		Symbol::E),
-	SymbolSpec('F',		"..-.",		Group::Letter,		Symbol::F),
-	SymbolSpec('G',		"--.",		Group::Letter,		Symbol::G),
-	SymbolSpec('H',		"....",		Group::Letter,		Symbol::H),
-	SymbolSpec('I',		"..",		Group::Letter,		Symbol::I),
-	SymbolSpec('J',		".---",		Group::Letter,		Symbol::J),
-	SymbolSpec('K',		"-.-",		Group::Letter,		Symbol::K),
-	SymbolSpec('L',		".-..",		Group::Letter,		Symbol::L),
-	SymbolSpec('M',		"--",		Group::Letter,		Symbol::M),
-	SymbolSpec('N',		"-.",		Group::Letter,		Symbol::N),
-	SymbolSpec('O',		"---",		Group::Letter,		Symbol::O),
-	SymbolSpec('P',		".--.",		Group::Letter,		Symbol::P),
-	SymbolSpec('Q',		"--.-",		Group::Letter,		Symbol::Q),
-	SymbolSpec('R',		".-.",		Group::Letter,		Symbol::R),
-	SymbolSpec('S',		"...",		Group::Letter,		Symbol::S),
-	SymbolSpec('T',		"-",		Group::Letter,		Symbol::T),
-	SymbolSpec('U',		"..-",		Group::Letter,		Symbol::U),
-	SymbolSpec('V',		"...-",		Group::Letter,		Symbol::V),
-	SymbolSpec('W',		".--",		Group::Letter,		Symbol::W),
-	SymbolSpec('X',		"-..-",		Group::Letter,		Symbol::X),
-	SymbolSpec('Y',		"-.--",		Group::Letter,		Symbol::Y),
-	SymbolSpec('Z',		"--..",		Group::Letter,		Symbol::Z),
-	SymbolSpec('0',		"-----",	Group::Number,		Symbol::_0),
-	SymbolSpec('1',		".----",	Group::Number,		Symbol::_1),
-	SymbolSpec('2',		"..---",	Group::Number,		Symbol::_2),
-	SymbolSpec('3',		"...--",	Group::Number,		Symbol::_3),
-	SymbolSpec('4',		"....-",	Group::Number,		Symbol::_4),
-	SymbolSpec('5',		".....",	Group::Number,		Symbol::_5),
-	SymbolSpec('6',		"-....",	Group::Number,		Symbol::_6),
-	SymbolSpec('7',		"--...",	Group::Number,		Symbol::_7),
-	SymbolSpec('8',		"---..",	Group::Number,		Symbol::_8),
-	SymbolSpec('9',		"----.",	Group::Number,		Symbol::_9),
-	SymbolSpec('.',		".-.-.-",	Group::Special,		Symbol::Period),
-	SymbolSpec(',',		"--..--",	Group::Special,		Symbol::Comma),
-	SymbolSpec('?',		"..--..",	Group::Special,		Symbol::Question),
-	SymbolSpec('!',		"-.-.--",	Group::Special,		Symbol::Exclamation),
-	SymbolSpec('/',		"-..-.",	Group::Special,		Symbol::Slash),
-	SymbolSpec('(',		"-.--.",	Group::Special,		Symbol::ParenthesisOpen),	// [KN] go ahead
-	SymbolSpec(')',		"-.--.-",	Group::Special,		Symbol::ParenthesisClose),
-	SymbolSpec('&',		".-...",	Group::Special,		Symbol::Ampersand),		// [AS] wait
-	SymbolSpec(':',		"---...",	Group::Special,		Symbol::Colon),
-	SymbolSpec(';',		"-.-.-.",	Group::Special,		Symbol::Semicolon),
-	SymbolSpec('=',		"-...-",	Group::Special,		Symbol::Equals),
-	SymbolSpec('+',		".-.-.",	Group::Special,		Symbol::Plus),
-	SymbolSpec('-',		"-....-",	Group::Special,		Symbol::Minus),
-	SymbolSpec('@',		".--.-.",	Group::Special,		Symbol::At),
-	SymbolSpec('$',		"...-..-",	Group::Special,		Symbol::Dollar),
-	SymbolSpec('~',		".-.-.-.",	Group::Prosign,		Symbol::Invalid), 		// [~] - for undefined CW sequences
-	SymbolSpec('*',		"........",	Group::Prosign,		Symbol::Correction), 	// [HH] error / correction
-	SymbolSpec('^',		"-.-.-",	Group::Prosign,		Symbol::Start), 		// [CT] commencing transmission
-	SymbolSpec('#',		"...-.-",	Group::Prosign,		Symbol::End), 			// [VA] end of contact
-	SymbolSpec('\n',	".-.-",		Group::Prosign,		Symbol::NewLine), 		// [RT] carriage return
-	SymbolSpec('%',		"...---...",	Group::Prosign,	Symbol::SOS), 			// [SOS]
+	SymbolSpec(' ',		"",			Group::Void,		CwSymbol::Space),
+	SymbolSpec('A',		".-",		Group::Letter,		CwSymbol::A),
+	SymbolSpec('B',		"-...",		Group::Letter,		CwSymbol::B),
+	SymbolSpec('C',		"-.-.",		Group::Letter,		CwSymbol::C),
+	SymbolSpec('D',		"-..",		Group::Letter,		CwSymbol::D),
+	SymbolSpec('E',		".",		Group::Letter,		CwSymbol::E),
+	SymbolSpec('F',		"..-.",		Group::Letter,		CwSymbol::F),
+	SymbolSpec('G',		"--.",		Group::Letter,		CwSymbol::G),
+	SymbolSpec('H',		"....",		Group::Letter,		CwSymbol::H),
+	SymbolSpec('I',		"..",		Group::Letter,		CwSymbol::I),
+	SymbolSpec('J',		".---",		Group::Letter,		CwSymbol::J),
+	SymbolSpec('K',		"-.-",		Group::Letter,		CwSymbol::K),
+	SymbolSpec('L',		".-..",		Group::Letter,		CwSymbol::L),
+	SymbolSpec('M',		"--",		Group::Letter,		CwSymbol::M),
+	SymbolSpec('N',		"-.",		Group::Letter,		CwSymbol::N),
+	SymbolSpec('O',		"---",		Group::Letter,		CwSymbol::O),
+	SymbolSpec('P',		".--.",		Group::Letter,		CwSymbol::P),
+	SymbolSpec('Q',		"--.-",		Group::Letter,		CwSymbol::Q),
+	SymbolSpec('R',		".-.",		Group::Letter,		CwSymbol::R),
+	SymbolSpec('S',		"...",		Group::Letter,		CwSymbol::S),
+	SymbolSpec('T',		"-",		Group::Letter,		CwSymbol::T),
+	SymbolSpec('U',		"..-",		Group::Letter,		CwSymbol::U),
+	SymbolSpec('V',		"...-",		Group::Letter,		CwSymbol::V),
+	SymbolSpec('W',		".--",		Group::Letter,		CwSymbol::W),
+	SymbolSpec('X',		"-..-",		Group::Letter,		CwSymbol::X),
+	SymbolSpec('Y',		"-.--",		Group::Letter,		CwSymbol::Y),
+	SymbolSpec('Z',		"--..",		Group::Letter,		CwSymbol::Z),
+	SymbolSpec('0',		"-----",	Group::Number,		CwSymbol::_0),
+	SymbolSpec('1',		".----",	Group::Number,		CwSymbol::_1),
+	SymbolSpec('2',		"..---",	Group::Number,		CwSymbol::_2),
+	SymbolSpec('3',		"...--",	Group::Number,		CwSymbol::_3),
+	SymbolSpec('4',		"....-",	Group::Number,		CwSymbol::_4),
+	SymbolSpec('5',		".....",	Group::Number,		CwSymbol::_5),
+	SymbolSpec('6',		"-....",	Group::Number,		CwSymbol::_6),
+	SymbolSpec('7',		"--...",	Group::Number,		CwSymbol::_7),
+	SymbolSpec('8',		"---..",	Group::Number,		CwSymbol::_8),
+	SymbolSpec('9',		"----.",	Group::Number,		CwSymbol::_9),
+	SymbolSpec('.',		".-.-.-",	Group::Special,		CwSymbol::Period),
+	SymbolSpec(',',		"--..--",	Group::Special,		CwSymbol::Comma),
+	SymbolSpec('?',		"..--..",	Group::Special,		CwSymbol::Question),
+	SymbolSpec('!',		"-.-.--",	Group::Special,		CwSymbol::Exclamation),
+	SymbolSpec('/',		"-..-.",	Group::Special,		CwSymbol::Slash),
+	SymbolSpec('(',		"-.--.",	Group::Special,		CwSymbol::ParenthesisOpen),	// [KN] go ahead
+	SymbolSpec(')',		"-.--.-",	Group::Special,		CwSymbol::ParenthesisClose),
+	SymbolSpec('&',		".-...",	Group::Special,		CwSymbol::Ampersand),		// [AS] wait
+	SymbolSpec(':',		"---...",	Group::Special,		CwSymbol::Colon),
+	SymbolSpec(';',		"-.-.-.",	Group::Special,		CwSymbol::Semicolon),
+	SymbolSpec('=',		"-...-",	Group::Special,		CwSymbol::Equals),
+	SymbolSpec('+',		".-.-.",	Group::Special,		CwSymbol::Plus),
+	SymbolSpec('-',		"-....-",	Group::Special,		CwSymbol::Minus),
+	SymbolSpec('@',		".--.-.",	Group::Special,		CwSymbol::At),
+	SymbolSpec('$',		"...-..-",	Group::Special,		CwSymbol::Dollar),
+	SymbolSpec('~',		".-.-.-.",	Group::Prosign,		CwSymbol::Invalid), 		// [~] - for undefined CW sequences
+	SymbolSpec('*',		"........",	Group::Prosign,		CwSymbol::Correction), 	// [HH] error / correction
+	SymbolSpec('^',		"-.-.-",	Group::Prosign,		CwSymbol::Start), 		// [CT] commencing transmission
+	SymbolSpec('#',		"...-.-",	Group::Prosign,		CwSymbol::End), 			// [VA] end of contact
+	SymbolSpec('\n',	".-.-",		Group::Prosign,		CwSymbol::NewLine), 		// [RT] carriage return
+	SymbolSpec('%',		"...---...",	Group::Prosign,	CwSymbol::SOS), 			// [SOS]
 ];

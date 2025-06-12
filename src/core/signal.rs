@@ -1,7 +1,4 @@
-use super::{
-	config::{Config, SignalConfig},
-	symbol::{ElementString, Symbol, SymbolString},
-};
+use crate::prelude::*;
 
 #[derive(Default, Debug, PartialEq, Clone)]
 pub enum Mode {
@@ -17,28 +14,64 @@ struct Signal<T> {
 }
 
 #[derive(Default)]
-pub struct SignalProcessor {
-	config: Config,
+pub struct SignalController<C>
+where
+	C: CwController<CwString, CwString>,
+{
+	symbol_controller: C,
 	mode: Mode,
 	buffer: Vec<Signal<bool>>,
 	last_input_state: bool,
 	elapsed_ms: u32,
+	last_time: u32,
 }
 
-type TickCallback<'a> = &'a mut dyn FnMut(SymbolString) -> SymbolString;
+impl<C> CwController<bool, Option<u32>> for SignalController<C>
+where
+	C: CwController<CwString, CwString>,
+{
+	fn tick(&mut self, ctx: &mut impl CwContext, input: bool) -> Option<u32> {
+		let time = ctx.time();
+		if self.last_time == 0 {
+			self.last_time = time;
+		}
+		let delta_ms = time - self.last_time;
+		self.elapsed_ms += delta_ms;
 
-impl SignalProcessor {
+		let signal_on = match self.mode {
+			Mode::Input => self.input_tick(ctx, input),
+			Mode::Output => self.output_tick(ctx, input),
+		};
+
+		let signal = match signal_on {
+			true => Some(match self.mode {
+				Mode::Input => ctx.config().input.signal.freq,
+				Mode::Output => ctx.config().output.signal.freq,
+			}),
+			false => None,
+		};
+
+		self.last_time = time;
+
+		signal
+	}
+}
+
+impl<C> SignalController<C>
+where
+	C: CwController<CwString, CwString>,
+{
 	pub const MAX_MS: u32 = 3000; // todo: make this configurable
+
+	pub fn new(controller: C) -> Self {
+		Self {
+			symbol_controller: controller,
+			..Default::default()
+		}
+	}
 
 	pub fn get_mode(&self) -> Mode {
 		self.mode.clone()
-	}
-
-	pub fn new(config: Config) -> Self {
-		Self {
-			config,
-			..Default::default()
-		}
 	}
 
 	pub fn reset(&mut self) {
@@ -47,16 +80,7 @@ impl SignalProcessor {
 		self.elapsed_ms = 0;
 	}
 
-	pub fn tick(&mut self, delta_ms: u32, input_state: bool, callback: TickCallback) -> bool {
-		self.elapsed_ms += delta_ms;
-
-		match self.mode {
-			Mode::Input => self.input_tick(input_state, callback),
-			Mode::Output => self.output_tick(input_state, callback),
-		}
-	}
-
-	fn input_tick(&mut self, input_state: bool, callback: TickCallback) -> bool {
+	fn input_tick(&mut self, ctx: &mut impl CwContext, input_state: bool) -> bool {
 		let last_input_state = self.last_input_state;
 
 		match (last_input_state, input_state) {
@@ -79,13 +103,14 @@ impl SignalProcessor {
 					});
 
 					let input_signals = self.buffer.clone();
-					let input_symbols = self.signals_to_symbols(input_signals);
+					let input = Self::signals_to_symbols(input_signals, &ctx.config());
+
+					let output = self.symbol_controller.tick(ctx, input);
+					let output_signals = Self::symbols_to_signals(output, &ctx.config());
 
 					self.reset();
 					self.mode = Mode::Output;
 
-					let output_symbols = callback(input_symbols);
-					let output_signals = self.symbols_to_signals(output_symbols);
 					self.buffer = output_signals;
 				}
 			}
@@ -96,11 +121,11 @@ impl SignalProcessor {
 		input_state
 	}
 
-	fn output_tick(&mut self, input_state: bool, callback: TickCallback) -> bool {
+	fn output_tick(&mut self, ctx: &mut impl CwContext, input_state: bool) -> bool {
 		if input_state {
 			self.mode = Mode::Input;
 			self.reset();
-			return self.input_tick(input_state, callback);
+			return self.input_tick(ctx, input_state);
 		}
 
 		if let Some(signal) = self.buffer.first() {
@@ -122,11 +147,11 @@ impl SignalProcessor {
 		}
 	}
 
-	fn signals_to_symbols(&self, signals: Vec<Signal<bool>>) -> SymbolString {
-		let config = SignalElementConfig::from(self.config.input.signal);
+	fn signals_to_symbols(signals: Vec<Signal<bool>>, config: &CwConfig) -> CwString {
+		let config = SignalElementConfig::from(config.input.signal);
 
-		let mut elements: ElementString = ElementString(vec![]);
-		let mut symbols: Vec<Symbol> = vec![];
+		let mut elements = CwElementString(vec![]);
+		let mut symbols: Vec<CwSymbol> = vec![];
 
 		for signal in signals {
 			if signal.value {
@@ -136,26 +161,26 @@ impl SignalProcessor {
 			} else if signal.duration >= config.break_ms {
 				dbg!(elements.clone());
 				// convert elements to a symbol if silence qualifies for a character break
-				symbols.push(Symbol::from_elements(&elements));
+				symbols.push(CwSymbol::from(&elements));
 				elements.0.clear();
 
 				// add a space
 				if signal.duration > config.space_ms {
-					symbols.push(Symbol::Space);
+					symbols.push(CwSymbol::Space);
 				}
 			}
 		}
 
-		SymbolString(symbols)
+		CwString(symbols)
 	}
 
-	fn symbols_to_signals(&self, symbols: SymbolString) -> Vec<Signal<bool>> {
-		let config = SignalElementConfig::from(self.config.output.signal);
+	fn symbols_to_signals(symbols: CwString, config: &CwConfig) -> Vec<Signal<bool>> {
+		let config = SignalElementConfig::from(config.output.signal);
 
 		let mut signals: Vec<Signal<bool>> = vec![];
 
 		for symbol in symbols.0 {
-			if let Symbol::Space = symbol {
+			if let CwSymbol::Space = symbol {
 				// remove the last silent signal element
 				if let Some(last) = signals.last() {
 					if !last.value {

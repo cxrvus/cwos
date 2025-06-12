@@ -1,14 +1,5 @@
-use super::symbol::SymbolString;
+use crate::prelude::CwContext;
 
-pub trait CwController: Default {
-	fn tick(&mut self, input: SymbolString) -> SymbolString;
-}
-
-#[derive(Default)]
-pub struct Echo;
-
-impl CwController for Echo {
-	fn tick(&mut self, input: SymbolString) -> SymbolString {
-		input
-	}
+pub trait CwController<Input, Output>: Default {
+	fn tick(&mut self, ctx: &mut impl CwContext, input: Input) -> Output;
 }
