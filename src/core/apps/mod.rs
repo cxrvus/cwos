@@ -19,6 +19,10 @@ impl CwController<CwString, CwString> for AppLauncher {
 					self.selected_app = Some(CwString(app_name.to_vec()));
 					CwString(app_name.to_vec())
 				}
+				[X] | [End] => {
+					ctx.quit();
+					Default::default()
+				}
 				[] => Default::default(),
 				_ => idk(),
 			},
