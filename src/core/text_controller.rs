@@ -2,22 +2,24 @@ use crate::{apps::Echo, prelude::*};
 
 #[derive(Default)]
 pub struct AppLauncher {
-	selected_app: Option<String>,
+	selected_app: Option<CwString>,
 }
 
 impl CwController<CwString, CwString> for AppLauncher {
 	fn tick(&mut self, ctx: &mut impl CwContext, input: CwString) -> CwString {
-		match self.selected_app {
-			Some(ref app_name) => match app_name.as_str() {
-				"EC" => Echo.tick(ctx, input),
+		use Symbol::*;
+
+		match &self.selected_app {
+			Some(app_name) => match app_name.0.as_slice() {
+				[E, C] => Echo.tick(ctx, input),
 				_ => idk(),
 			},
-			None => match input.normalized().as_string().as_str() {
-				app_name @ "EC" => {
-					self.selected_app = Some(app_name.into());
-					app_name.to_string().try_into().unwrap()
+			None => match input.normalized().0.as_slice() {
+				app_name @ [E, C] => {
+					self.selected_app = Some(CwString(app_name.to_vec()));
+					CwString(app_name.to_vec())
 				}
-				"" => Default::default(),
+				[] => Default::default(),
 				_ => idk(),
 			},
 		}
