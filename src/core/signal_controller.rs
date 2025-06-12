@@ -14,7 +14,10 @@ struct Signal<T> {
 }
 
 #[derive(Default)]
-pub struct SignalController<C: CwController<CwString, CwString>> {
+pub struct SignalController<C>
+where
+	C: CwController<CwString, CwString>,
+{
 	symbol_controller: C,
 	mode: Mode,
 	buffer: Vec<Signal<bool>>,
@@ -23,11 +26,11 @@ pub struct SignalController<C: CwController<CwString, CwString>> {
 	last_time: u32,
 }
 
-impl<C: CwController<CwString, CwString>> SignalController<C> {
-	pub const MAX_MS: u32 = 3000; // todo: make this configurable
-
-	// TODO: move to trait impl
-	pub fn tick(&mut self, ctx: &mut impl CwContext, input: bool) -> Option<u32> {
+impl<C> CwController<bool, Option<u32>> for SignalController<C>
+where
+	C: CwController<CwString, CwString>,
+{
+	fn tick(&mut self, ctx: &mut impl CwContext, input: bool) -> Option<u32> {
 		let time = ctx.time();
 		if self.last_time == 0 {
 			self.last_time = time;
@@ -52,6 +55,13 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 
 		signal
 	}
+}
+
+impl<C> SignalController<C>
+where
+	C: CwController<CwString, CwString>,
+{
+	pub const MAX_MS: u32 = 3000; // todo: make this configurable
 
 	pub fn new(controller: C) -> Self {
 		Self {
