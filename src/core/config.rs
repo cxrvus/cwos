@@ -60,4 +60,8 @@ pub struct OutputConfig {
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
 pub struct InputConfig {
 	pub signal: SignalConfig,
+	// impl this to replace const MAX_MS
+	// pub idle_ms: u32,
+	// impl this to send Error Correction
+	// pub correction_ms: u32,
 }

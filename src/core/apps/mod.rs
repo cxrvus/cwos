@@ -5,6 +5,9 @@ pub struct AppLauncher {
 	selected_app: Option<CwString>,
 }
 
+// todo: streamline AppLauncher
+// todo: add clock app
+// todo: add timer scheduler
 impl CwController<CwString, CwString> for AppLauncher {
 	fn tick(&mut self, ctx: &mut impl CwContext, input: CwString) -> CwString {
 		use CwSymbol::*;

@@ -9,4 +9,6 @@ pub trait CwContext {
 
 	/// close app or go to sleep
 	fn quit(&self);
+
+	// todo: add database I/O
 }
