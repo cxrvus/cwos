@@ -2,7 +2,7 @@
 // idea: provide config as file
 // idea: add modes: dot/dash mode, string mode etc
 
-use cwos::{prelude::*, std_context::StdContext};
+use cwos::{core::apps::AppLauncher, prelude::*, std_context::StdContext};
 use std::io::stdin;
 
 pub fn main() {

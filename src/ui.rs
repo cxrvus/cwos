@@ -1,4 +1,4 @@
-use crate::{prelude::*, std_context::StdContext};
+use crate::{core::apps::AppLauncher, prelude::*, std_context::StdContext};
 use eframe::egui::{self, Color32, IconData, Key, Ui};
 use image::load_from_memory;
 use rodio::{source::SineWave, OutputStream, OutputStreamHandle, Sink, Source};
