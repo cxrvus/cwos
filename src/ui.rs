@@ -23,13 +23,11 @@ pub fn create_app() -> App {
 }
 
 #[derive(Default)]
-struct UiContext {
-	config: Config,
-}
+struct UiContext;
 
 impl CwContext for UiContext {
-	fn config(&self) -> &Config {
-		&self.config
+	fn config(&self) -> Config {
+		Config::default()
 	}
 
 	fn time(&self) -> u32 {
@@ -79,7 +77,7 @@ impl eframe::App for App {
 			let kb_input = egui_ctx.input(|i| i.key_down(Key::Space));
 			let input = mouse_input || kb_input;
 
-			let mut cw_ctx = UiContext::default();
+			let mut cw_ctx = UiContext;
 
 			let signal = self.controller.tick(&mut cw_ctx, input);
 

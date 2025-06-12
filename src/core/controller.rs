@@ -6,7 +6,7 @@ pub trait CwController<Input, Output>: Default {
 
 pub trait CwContext {
 	/// get current configuration
-	fn config(&self) -> &Config;
+	fn config(&self) -> Config;
 
 	/// get current time in milliseconds
 	fn time(&self) -> u32;

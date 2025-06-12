@@ -10,7 +10,7 @@ struct CliContext;
 
 // TODO: use StdContext (merged with UiContext)
 impl CwContext for CliContext {
-	fn config(&self) -> &Config {
+	fn config(&self) -> Config {
 		todo!()
 	}
 

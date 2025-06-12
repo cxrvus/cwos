@@ -58,15 +58,15 @@ impl<C: CwController<CwString, CwString>> LinearController<C> {
 		signal
 	}
 
-	pub fn get_mode(&self) -> Mode {
-		self.mode.clone()
-	}
-
 	pub fn new(controller: C) -> Self {
 		Self {
 			controller,
 			..Default::default()
 		}
+	}
+
+	pub fn get_mode(&self) -> Mode {
+		self.mode.clone()
 	}
 
 	pub fn reset(&mut self) {
@@ -98,10 +98,10 @@ impl<C: CwController<CwString, CwString>> LinearController<C> {
 					});
 
 					let input_signals = self.buffer.clone();
-					let input = Self::signals_to_symbols(input_signals, ctx.config());
+					let input = Self::signals_to_symbols(input_signals, &ctx.config());
 
 					let output = self.controller.tick(ctx, input);
-					let output_signals = Self::symbols_to_signals(output, ctx.config());
+					let output_signals = Self::symbols_to_signals(output, &ctx.config());
 
 					self.reset();
 					self.mode = Mode::Output;
