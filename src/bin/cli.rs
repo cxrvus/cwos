@@ -14,17 +14,11 @@ pub fn main() {
 		stdin().read_line(&mut input_str).unwrap();
 		let input_str = input_str.trim();
 
-		match CwString::try_from(input_str.to_string()) {
-			Ok(input) => {
-				let mut ctx = StdContext;
-				let output = controller.tick(&mut ctx, input).as_string();
+		let input = CwString::new(input_str);
+		let mut ctx = StdContext;
+		let output = controller.tick(&mut ctx, input).as_string();
 
-				println!("{output}");
-			}
-			Err(error) => {
-				println!("<!> Error: {}", error);
-			}
-		};
+		println!("{output}");
 
 		println!();
 	}

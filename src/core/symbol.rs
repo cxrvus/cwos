@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Result};
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
 pub struct ElementString(pub Vec<bool>);
 
@@ -139,12 +138,12 @@ impl Symbol {
 			.unwrap_or(Self::Invalid)
 	}
 
-	pub fn from_char(char: char) -> Result<Self> {
+	pub fn from_char(char: char) -> Self {
 		SYMBOL_SPEC
 			.iter()
 			.find(|spec| spec.character() == char.to_ascii_uppercase())
 			.map(|spec| spec.symbol().clone())
-			.ok_or_else(|| anyhow!("invalid plaintext char: {:?}", char))
+			.unwrap_or(Symbol::Invalid)
 	}
 }
 
@@ -156,26 +155,21 @@ impl CwString {
 		self.0.iter().map(|symbol| symbol.character()).collect()
 	}
 
+	pub fn new(str: &str) -> Self {
+		Self(
+			str.to_ascii_uppercase()
+				.chars()
+				.map(Symbol::from_char)
+				.collect::<Vec<Symbol>>(),
+		)
+	}
+
 	pub fn normalized(&self) -> Self {
 		let str = self.as_string();
 		let str = str.trim();
 		// todo: handle [HH]
-		Self::try_from(str.to_string()).unwrap()
+		Self::new(str)
 	}
-}
-
-impl TryFrom<String> for CwString {
-	fn try_from(string: String) -> Result<Self> {
-		let symbols = string
-			.to_ascii_uppercase()
-			.chars()
-			.map(Symbol::from_char)
-			.collect::<Result<Vec<Symbol>>>()?;
-
-		Ok(Self(symbols))
-	}
-
-	type Error = anyhow::Error;
 }
 
 struct SymbolSpec(char, &'static str, Group, Symbol);
