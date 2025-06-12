@@ -2,6 +2,7 @@ pub mod apps;
 pub mod config;
 pub mod context;
 pub mod controller;
+pub mod element;
 pub mod signal_controller;
 pub mod symbol;
 
@@ -10,6 +11,7 @@ pub mod prelude {
 	pub use super::config::*;
 	pub use super::context::*;
 	pub use super::controller::*;
+	pub use super::element::*;
 	pub use super::signal_controller::*;
 	pub use super::symbol::*;
 }

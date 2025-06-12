@@ -1,10 +1,5 @@
 use crate::prelude::*;
 
-use super::{
-	config::SignalConfig,
-	symbol::{CwString, ElementString, Symbol},
-};
-
 #[derive(Default, Debug, PartialEq, Clone)]
 pub enum Mode {
 	#[default]
@@ -145,7 +140,7 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 	fn signals_to_symbols(signals: Vec<Signal<bool>>, config: &CwConfig) -> CwString {
 		let config = SignalElementConfig::from(config.input.signal);
 
-		let mut elements: ElementString = ElementString(vec![]);
+		let mut elements = ElementString(vec![]);
 		let mut symbols: Vec<Symbol> = vec![];
 
 		for signal in signals {

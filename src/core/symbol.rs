@@ -1,39 +1,75 @@
-#[derive(Debug, Default, Hash, PartialEq, Eq, Clone)]
-pub struct ElementString(pub Vec<bool>);
+use crate::prelude::ElementString;
 
-impl ElementString {
-	pub fn to_dot_string(&self) -> String {
-		if self.0.is_empty() {
-			" / ".to_string()
-		} else {
-			self.0
-				.iter()
-				.map(|&element| if element { "-" } else { "." })
-				.collect::<String>()
-		}
+impl Symbol {
+	pub fn character(&self) -> char {
+		self.get_spec().character()
+	}
+
+	pub fn elements(&self) -> ElementString {
+		self.get_spec().elements()
+	}
+
+	pub fn group(&self) -> Group {
+		self.get_spec().group()
+	}
+
+	fn get_spec(&self) -> &SymbolSpec {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.symbol() == *self)
+			.unwrap()
+	}
+
+	pub fn from_elements(elements: &ElementString) -> Self {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.elements() == *elements)
+			.map(|spec| spec.symbol().clone())
+			.unwrap_or(Self::Invalid)
+	}
+
+	pub fn from_char(char: char) -> Self {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.character() == char.to_ascii_uppercase())
+			.map(|spec| spec.symbol().clone())
+			.unwrap_or(Symbol::Invalid)
 	}
 }
 
-impl From<String> for ElementString {
-	fn from(element_str: String) -> Self {
-		if element_str.is_empty() {
-			return Self::default();
-		}
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
+pub struct CwString(pub Vec<Symbol>);
 
-		let mut elements = vec![];
-
-		for signal_char in element_str.chars() {
-			let element = match signal_char {
-				'.' => false,
-				'-' => true,
-				_ => panic!("char may only be '.' or '-'"),
-			};
-
-			elements.push(element);
-		}
-
-		Self(elements)
+impl CwString {
+	pub fn as_string(&self) -> String {
+		self.0.iter().map(|symbol| symbol.character()).collect()
 	}
+
+	pub fn new(str: &str) -> Self {
+		Self(
+			str.to_ascii_uppercase()
+				.chars()
+				.map(Symbol::from_char)
+				.collect::<Vec<Symbol>>(),
+		)
+	}
+
+	pub fn normalized(&self) -> Self {
+		let str = self.as_string();
+		let str = str.trim();
+		// todo: handle [HH]
+		Self::new(str)
+	}
+}
+
+struct SymbolSpec(char, &'static str, Group, Symbol);
+
+#[rustfmt::skip]
+impl SymbolSpec {
+	pub fn character(&self) -> char { self.0 }
+	pub fn elements(&self) -> ElementString { ElementString::from(self.1.to_string()) }
+	pub fn group(&self) -> Group { self.2.clone() }
+	pub fn symbol(&self) -> Symbol { self.3.clone() }
 }
 
 #[derive(Clone)]
@@ -108,78 +144,6 @@ pub enum Symbol {
 	EndOfContact,
 	NewLine,
 	SOS,
-}
-
-impl Symbol {
-	pub fn character(&self) -> char {
-		self.get_spec().character()
-	}
-
-	pub fn elements(&self) -> ElementString {
-		self.get_spec().elements()
-	}
-
-	pub fn group(&self) -> Group {
-		self.get_spec().group()
-	}
-
-	fn get_spec(&self) -> &SymbolSpec {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.symbol() == *self)
-			.unwrap()
-	}
-
-	pub fn from_elements(elements: &ElementString) -> Self {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.elements() == *elements)
-			.map(|spec| spec.symbol().clone())
-			.unwrap_or(Self::Invalid)
-	}
-
-	pub fn from_char(char: char) -> Self {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.character() == char.to_ascii_uppercase())
-			.map(|spec| spec.symbol().clone())
-			.unwrap_or(Symbol::Invalid)
-	}
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Eq)]
-pub struct CwString(pub Vec<Symbol>);
-
-impl CwString {
-	pub fn as_string(&self) -> String {
-		self.0.iter().map(|symbol| symbol.character()).collect()
-	}
-
-	pub fn new(str: &str) -> Self {
-		Self(
-			str.to_ascii_uppercase()
-				.chars()
-				.map(Symbol::from_char)
-				.collect::<Vec<Symbol>>(),
-		)
-	}
-
-	pub fn normalized(&self) -> Self {
-		let str = self.as_string();
-		let str = str.trim();
-		// todo: handle [HH]
-		Self::new(str)
-	}
-}
-
-struct SymbolSpec(char, &'static str, Group, Symbol);
-
-#[rustfmt::skip]
-impl SymbolSpec {
-	pub fn character(&self) -> char { self.0 }
-	pub fn elements(&self) -> ElementString { ElementString::from(self.1.to_string()) }
-	pub fn group(&self) -> Group { self.2.clone() }
-	pub fn symbol(&self) -> Symbol { self.3.clone() }
 }
 
 #[rustfmt::skip]
