@@ -12,7 +12,7 @@ impl CwController<CwString, CwString> for AppLauncher {
 				"EC" => Echo.tick(ctx, input),
 				_ => idk(),
 			},
-			None => match input.as_string().as_str() {
+			None => match input.normalized().as_string().as_str() {
 				app_name @ "EC" => {
 					self.selected_app = Some(app_name.into());
 					app_name.to_string().try_into().unwrap()
