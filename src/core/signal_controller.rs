@@ -151,7 +151,7 @@ impl<C: CwController<CwString, CwString>> SignalController<C> {
 			} else if signal.duration >= config.break_ms {
 				dbg!(elements.clone());
 				// convert elements to a symbol if silence qualifies for a character break
-				symbols.push(CwSymbol::from_elements(&elements));
+				symbols.push(CwSymbol::from(&elements));
 				elements.0.clear();
 
 				// add a space

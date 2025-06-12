@@ -14,9 +14,9 @@ pub fn main() {
 		stdin().read_line(&mut input_str).unwrap();
 		let input_str = input_str.trim();
 
-		let input = CwString::new(input_str);
+		let input = CwString::from(input_str);
 		let mut ctx = StdContext;
-		let output = controller.tick(&mut ctx, input).as_string();
+		let output = String::from(&controller.tick(&mut ctx, input));
 
 		println!("{output}");
 

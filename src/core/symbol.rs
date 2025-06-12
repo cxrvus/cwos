@@ -19,21 +19,25 @@ impl CwSymbol {
 			.find(|spec| spec.symbol() == *self)
 			.unwrap()
 	}
+}
 
-	pub fn from_elements(elements: &CwElementString) -> Self {
+impl From<char> for CwSymbol {
+	fn from(c: char) -> Self {
+		SYMBOL_SPEC
+			.iter()
+			.find(|spec| spec.character() == c.to_ascii_uppercase())
+			.map(|spec| spec.symbol().clone())
+			.unwrap_or(CwSymbol::Invalid)
+	}
+}
+
+impl From<&CwElementString> for CwSymbol {
+	fn from(elements: &CwElementString) -> Self {
 		SYMBOL_SPEC
 			.iter()
 			.find(|spec| spec.elements() == *elements)
 			.map(|spec| spec.symbol().clone())
 			.unwrap_or(Self::Invalid)
-	}
-
-	pub fn from_char(char: char) -> Self {
-		SYMBOL_SPEC
-			.iter()
-			.find(|spec| spec.character() == char.to_ascii_uppercase())
-			.map(|spec| spec.symbol().clone())
-			.unwrap_or(CwSymbol::Invalid)
 	}
 }
 
@@ -41,24 +45,32 @@ impl CwSymbol {
 pub struct CwString(pub Vec<CwSymbol>);
 
 impl CwString {
-	pub fn new(str: &str) -> Self {
+	pub fn normalized(&self) -> Self {
+		let str = String::from(self);
+		let str = str.trim();
+		// todo: handle [HH]
+		Self::from(str)
+	}
+}
+
+impl From<&str> for CwString {
+	fn from(s: &str) -> Self {
 		Self(
-			str.to_ascii_uppercase()
+			s.to_ascii_uppercase()
 				.chars()
-				.map(CwSymbol::from_char)
+				.map(CwSymbol::from)
 				.collect::<Vec<CwSymbol>>(),
 		)
 	}
+}
 
-	pub fn as_string(&self) -> String {
-		self.0.iter().map(|symbol| symbol.character()).collect()
-	}
-
-	pub fn normalized(&self) -> Self {
-		let str = self.as_string();
-		let str = str.trim();
-		// todo: handle [HH]
-		Self::new(str)
+impl From<&CwString> for String {
+	fn from(cw_string: &CwString) -> Self {
+		cw_string
+			.0
+			.iter()
+			.map(|symbol| symbol.character())
+			.collect()
 	}
 }
 
